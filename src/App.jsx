@@ -1,25 +1,20 @@
 import React, { useState, useEffect } from 'react';
 
 export default function App() {
-  const timelineStart = new Date(2021, 0, 1);
-  const timelineEnd = new Date(2026, 11, 31);
+  // Timeline boundaries set strictly to 2026 for tight visual scaling
+  const timelineStart = new Date(2026, 0, 1); // January 1, 2026
+  const timelineEnd = new Date(2026, 11, 31); // December 31, 2026
   const totalTimelineDays = Math.round((timelineEnd - timelineStart) / 86400000);
 
+  // Filtered dataset preserving only stays from Jan 1, 2026 onward
   const initialDataSet = [
-    { country: "Italy", entry: "2021-09-29", exit: "2021-10-07", ongoing: false, color: '#3b82f6' },
-    { country: "Spain", entry: "2022-09-01", exit: "2022-09-05", ongoing: false, color: '#eab308' },
-    { country: "France", entry: "2023-01-27", exit: "2023-01-29", ongoing: false, color: '#ec4899' },
-    { country: "Spain", entry: "2023-10-06", exit: "2023-10-15", ongoing: false, color: '#eab308' },
-    { country: "Spain", entry: "2024-05-16", exit: "2024-05-20", ongoing: false, color: '#eab308' },
-    { country: "France", entry: "2024-06-30", exit: "2024-07-10", ongoing: false, color: '#ec4899' },
-    { country: "Switzerland", entry: "2025-08-22", exit: "2025-09-01", ongoing: false, color: '#14b8a6' },
     { country: "Spain", entry: "2026-04-03", exit: "2026-04-11", ongoing: false, color: '#eab308' },
     { country: "Poland", entry: "2026-06-26", exit: "2026-07-06", ongoing: false, color: '#10b981' },
     { country: "Poland", entry: "2026-07-10", exit: "", ongoing: true, color: '#10b981' }
   ];
 
   const [trips, setTrips] = useState(() => {
-    const saved = localStorage.getItem('schengen_graphical_timeline_v2');
+    const saved = localStorage.getItem('schengen_graphical_timeline_v3');
     return saved ? JSON.parse(saved) : initialDataSet;
   });
 
@@ -35,7 +30,7 @@ export default function App() {
   const [isOngoing, setIsOngoing] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem('schengen_graphical_timeline_v2', JSON.stringify(trips));
+    localStorage.setItem('schengen_graphical_timeline_v3', JSON.stringify(trips));
   }, [trips]);
 
   const parseLocalDate = (str) => !str ? new Date() : new Date(str + "T00:00:00");
@@ -115,18 +110,16 @@ export default function App() {
             <input type="date" value={evalDate} onChange={(e) => handleDatePickerChange(e.target.value)} style={inputStyle} />
           </div>
 
-          {/* UPGRADED 4X TALLER VISUAL GRAPHICAL TIMELINE */}
+          {/* VISUAL GRAPHICAL TIMELINE FOR 2026 FOOTPRINT */}
           <div style={{ position: 'relative', height: '160px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', margin: '24px 0 16px 0', overflow: 'hidden', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.5)' }}>
             
-            {/* Year Guidelines Grid for Visual Context */}
-            <div style={{ position: 'absolute', left: '0%', width: '16.6%', borderRight: '1px solid #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2021</div>
-            <div style={{ position: 'absolute', left: '16.6%', width: '16.6%', borderRight: '1px solid #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2022</div>
-            <div style={{ position: 'absolute', left: '33.2%', width: '16.6%', borderRight: '1px solid #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2023</div>
-            <div style={{ position: 'absolute', left: '49.8%', width: '16.6%', borderRight: '1px solid #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2024</div>
-            <div style={{ position: 'absolute', left: '66.4%', width: '16.6%', borderRight: '1px solid #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2025</div>
-            <div style={{ position: 'absolute', left: '83%', width: '17%', top: 0, bottom: 0, padding: '4px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2026</div>
+            {/* 2026 Quarter Guidelines Grid for Clearer Context */}
+            <div style={{ position: 'absolute', left: '0%', width: '25%', borderRight: '1px solid #1e293b', top: 0, bottom: 0, padding: '6px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2026 Q1</div>
+            <div style={{ position: 'absolute', left: '25%', width: '25%', borderRight: '1px solid #1e293b', top: 0, bottom: 0, padding: '6px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2026 Q2</div>
+            <div style={{ position: 'absolute', left: '50%', width: '25%', borderRight: '1px solid #1e293b', top: 0, bottom: 0, padding: '6px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2026 Q3</div>
+            <div style={{ position: 'absolute', left: '75%', width: '25%', top: 0, bottom: 0, padding: '6px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2026 Q4</div>
 
-            {/* Rolling Lookback Window (Blue Shadow Area) */}
+            {/* Rolling Lookback Window (Blue Highlight Block Area) */}
             <div style={{ position: 'absolute', left: `${windowLeft}%`, width: `${windowWidth}%`, top: 0, bottom: 0, background: 'rgba(59,130,246,0.12)', borderLeft: '1px dashed #3b82f6', borderRight: '1px dashed #3b82f6', zIndex: 1 }} />
             
             {/* Travel Segments Color Blocks */}
@@ -192,7 +185,7 @@ export default function App() {
           </form>
         </div>
 
-        {/* TIMELINE HISTORY LOG */}
+        {/* TIMELINE HISTORY LOG LOG */}
         <div style={cardStyle}>
           <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>📋 Logged Stay Segments</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
