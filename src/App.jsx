@@ -44,7 +44,10 @@ export default function App() {
     if (!str) return "Ongoing";
     const dateObj = new Date(str + "T00:00:00");
     if (isNaN(dateObj.getTime())) return str;
-    return `${String(dateObj.getDate()).padStart(2,'0')}/${String(dateObj.getMonth()+1).padStart(2,'0')}/${dateObj.getFullYear()}`;
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const year = dateObj.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
   const handleDatePickerChange = (isoVal) => {
@@ -115,19 +118,29 @@ export default function App() {
             <input type="date" value={evalDate} onChange={(e) => handleDatePickerChange(e.target.value)} style={inputStyle} />
           </div>
 
-          {/* VISUAL GRAPHICAL TIMELINE BAR CHART */}
-          <div style={{ position: 'relative', height: '40px', background: '#0f172a', borderRadius: '8px', border: '1px solid #334155', margin: '24px 0 12px 0', overflow: 'hidden' }}>
+          {/* UPGRADED 4X TALLER VISUAL GRAPHICAL TIMELINE */}
+          <div style={{ position: 'relative', height: '160px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', margin: '24px 0 16px 0', overflow: 'hidden', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.5)' }}>
+            
+            {/* Year Guidelines Grid for Visual Context */}
+            <div style={{ position: 'absolute', left: '0%', width: '16.6%', borderRight: '1px solid #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2021</div>
+            <div style={{ position: 'absolute', left: '16.6%', width: '16.6%', borderRight: '1px solid #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2022</div>
+            <div style={{ position: 'absolute', left: '33.2%', width: '16.6%', borderRight: '1px solid #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2023</div>
+            <div style={{ position: 'absolute', left: '49.8%', width: '16.6%', borderRight: '1px solid #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2024</div>
+            <div style={{ position: 'absolute', left: '66.4%', width: '16.6%', borderRight: '1px solid #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2025</div>
+            <div style={{ position: 'absolute', left: '83%', width: '17%', top: 0, bottom: 0, padding: '4px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2026</div>
+
             {/* Rolling Lookback Window (Blue Shadow Area) */}
-            <div style={{ position: 'absolute', left: `${windowLeft}%`, width: `${windowWidth}%`, top: 0, bottom: 0, background: 'rgba(59,130,246,0.15)', borderLeft: '1px dashed #3b82f6', borderRight: '1px dashed #3b82f6', zIndex: 1 }} />
+            <div style={{ position: 'absolute', left: `${windowLeft}%`, width: `${windowWidth}%`, top: 0, bottom: 0, background: 'rgba(59,130,246,0.12)', borderLeft: '1px dashed #3b82f6', borderRight: '1px dashed #3b82f6', zIndex: 1 }} />
             
             {/* Travel Segments Color Blocks */}
             {processedTrips.map((trip) => (
-              <div key={trip.idx} style={{ position: 'absolute', left: `${trip.left}%`, width: `${trip.width}%`, top: '8px', bottom: '8px', backgroundColor: trip.color || '#3b82f6', borderRadius: '3px', minWidth: '3px', zIndex: 2 }} title={`${trip.country}: ${trip.duration} days`} />
+              <div key={trip.idx} style={{ position: 'absolute', left: `${trip.left}%`, width: `${trip.width}%`, top: '24px', bottom: '24px', backgroundColor: trip.color || '#3b82f6', borderRadius: '4px', minWidth: '4px', zIndex: 2, boxShadow: '0 2px 5px rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)' }} title={`${trip.country}: ${trip.duration} days`} />
             ))}
 
-            {/* Target Red Indicator Pin */}
+            {/* Target Red Indicator Pin Line */}
             <div style={{ position: 'absolute', left: `${evalMarkerLeft}%`, width: '2px', top: 0, bottom: 0, backgroundColor: '#ef4444', zIndex: 3 }}>
-              <div style={{ position: 'absolute', top: '-4px', left: '-4px', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ef4444' }} />
+              <div style={{ position: 'absolute', top: 0, left: '-4px', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ef4444', boxShadow: '0 0 8px #ef4444' }} />
+              <div style={{ position: 'absolute', bottom: 0, left: '-4px', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ef4444', boxShadow: '0 0 8px #ef4444' }} />
             </div>
           </div>
 
@@ -183,7 +196,7 @@ export default function App() {
           </form>
         </div>
 
-        {/* WORKSPACE HISTORY LOG */}
+        {/* TIMELINE HISTORY LOG LOG */}
         <div style={cardStyle}>
           <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>📋 Logged Stay Segments</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -191,24 +204,4 @@ export default function App() {
               <div key={trip.idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0f172a', border: '1px solid #334155', padding: '14px', borderRadius: '12px' }}>
                 <div>
                   <div style={{ fontWeight: 'bold', color: '#f8fafc', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: trip.color, display: 'inline-block' }} />
-                    {trip.country}
-                    {trip.ongoing && <span style={{ background: '#1e3a8a', color: '#60a5fa', border: '1px solid #3b82f6', fontSize: '9px', fontWeight: '700', padding: '2px 6px', borderRadius: '20px', textTransform: 'uppercase' }}>Active</span>}
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
-                    {formatDisplayDate(trip.entry)} — {trip.ongoing ? 'Ongoing Stay' : formatDisplayDate(trip.exit)}
-                  </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span style={{ background: '#334155', padding: '4px 8px', borderRadius: '6px', fontSize: '13px', fontWeight: '700', color: '#f1f5f9' }}>{trip.duration} Days</span>
-                  <button type="button" onClick={() => setTrips(trips.filter((_, i) => i !== trip.idx))} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '16px' }}>🗑️</button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-      </div>
-    </div>
-  );
-}
+<span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: trip.color, display: 'inline-block' }} />{trip.country}{trip.ongoing && <span style={{ background: '#1e3a8a', color: '#60a5fa', border: '1px solid #3b82f6', fontSize: '9px', fontWeight: '700', padding: '2px 6px', borderRadius: '20px', textTransform: 'uppercase' }}>Active}<div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>{formatDisplayDate(trip.entry)} — {trip.ongoing ? 'Ongoing Stay' : formatDisplayDate(trip.exit)}<div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><span style={{ background: '#334155', padding: '4px 8px', borderRadius: '6px', fontSize: '13px', fontWeight: '700', color: '#f1f5f9' }}>{trip.duration} Days<button type="button" onClick={() => setTrips(trips.filter((_, i) => i !== trip.idx))} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '16px' }}>🗑️))});}
