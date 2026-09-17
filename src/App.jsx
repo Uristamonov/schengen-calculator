@@ -16,7 +16,7 @@ export default function App() {
   ];
 
   const [trips, setTrips] = useState(() => {
-    const saved = localStorage.getItem('schengen_react_dark_v1');
+    const saved = localStorage.getItem('schengen_react_graphics_v9');
     return saved ? JSON.parse(saved) : initialDataSet;
   });
 
@@ -28,7 +28,7 @@ export default function App() {
   const [isOngoing, setIsOngoing] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem('schengen_react_dark_v1', JSON.stringify(trips));
+    localStorage.setItem('schengen_react_graphics_v9', JSON.stringify(trips));
   }, [trips]);
 
   const parseLocalDate = (str) => !str ? new Date() : new Date(str + "T00:00:00");
@@ -57,7 +57,7 @@ export default function App() {
 
   const handleAddTrip = (e) => {
     e.preventDefault();
-    if (!entryDate || (!exitDate && !isOngoing)) return alert("Please check inputs.");
+    if (!entryDate || (!exitDate && !isOngoing)) return alert("Please fill in valid entry dates.");
     setTrips([...trips, { country: country.trim() || "Schengen Country", entry: entryDate, exit: isOngoing ? "" : exitDate, ongoing: isOngoing }]);
     setCountry(""); setEntryDate(""); setExitDate(""); setIsOngoing(false);
   };
@@ -81,80 +81,99 @@ export default function App() {
     return { ...trip, duration: segmentDuration, idx };
   });
   return (
-    <div className="w-full max-w-xl mx-auto p-4 flex flex-col gap-6 text-slate-200">
+    <div className="w-full max-w-xl mx-auto p-4 flex flex-col gap-5 text-slate-100 selection:bg-blue-500/30">
       
-      {/* HEADER MONITOR COCKPIT */}
-      <div className="bg-slate-800 rounded-2xl border border-slate-700 shadow-xl p-6">
-        <h1 className="text-2xl font-black text-slate-100 tracking-tight">🇪🇺 Schengen Stay Calculator</h1>
-        <p className="text-slate-400 text-xs mb-4">Permanent Dark Mode Look</p>
-        
-        <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 my-4 flex flex-col gap-3">
-          <div className="flex justify-between items-center">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Evaluation Date: {formatDisplayDate(evalDate)}</span>
-            <input type="date" value={evalDate} onChange={(e) => handleDatePickerChange(e.target.value)} className="border border-slate-600 rounded-lg p-1.5 text-xs bg-slate-800 text-slate-100 outline-none" />
+      {/* MONITOR PANEL CONTAINER */}
+      <div className="bg-slate-800/90 backdrop-blur-md rounded-3xl border border-slate-700/60 shadow-2xl p-6 transition-all">
+        <div className="flex justify-between items-start mb-2">
+          <div>
+            <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
+              🇪🇺 Schengen Short-Stay Monitor
+            </h1>
+            <p className="text-slate-400 text-xs font-medium">90/180-day rolling lookback validation module</p>
           </div>
-          <input type="range" min="0" max="365" value={sliderValue} onChange={(e) => handleSliderChange(e.target.value)} className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500 outline-none" />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-stretch mt-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 flex flex-col justify-center items-center">
-            <h3 className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Days Used</h3>
-            <p className="text-4xl font-black text-slate-100 mt-1 leading-none">{totalDaysUsed}</p>
+        {/* INTERACTIVE TIMELINE SLIDER AREA */}
+        <div className="bg-slate-900/60 border border-slate-700/50 rounded-2xl p-4 my-4 flex flex-col gap-3">
+          <div className="flex justify-between items-center">
+            <span className="text-xs font-bold text-slate-300 tracking-wide uppercase">Evaluation: {formatDisplayDate(evalDate)}</span>
+            <input type="date" value={evalDate} onChange={(e) => handleDatePickerChange(e.target.value)} className="border border-slate-600 rounded-xl px-2 py-1 text-xs bg-slate-800 text-slate-100 font-bold outline-none cursor-pointer focus:border-blue-500" />
           </div>
+          <input type="range" min="0" max="365" value={sliderValue} onChange={(e) => handleSliderChange(e.target.value)} className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500 outline-none" />
+        </div>
+
+        {/* METRICS DASHBOARD CONTAINER FRAME */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-stretch mt-2">
+          <div className="bg-slate-900/80 border border-slate-700/60 rounded-2xl p-4 flex flex-col justify-center items-center shadow-inner">
+            <h3 className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest">Days Used</h3>
+            <p className="text-4xl font-black text-white mt-1.5 tracking-tight">{totalDaysUsed}</p>
+            <span className="text-[9px] text-slate-500 font-bold mt-1 uppercase">Limit: 90 Days</span>
+          </div>
+
           <div className="sm:col-span-2 flex">
             {totalDaysUsed > 90 ? (
-              <div className="w-full bg-red-950/40 border border-red-800 text-red-200 p-4 rounded-xl text-xs flex items-center">Your timeline uses <b>{totalDaysUsed} days</b>, triggering an overstay breach by <b>{totalDaysUsed - 90} days</b>!</div>
+              <div className="w-full bg-red-950/40 border border-red-800/80 text-red-200 p-4 rounded-2xl flex flex-col justify-center shadow-md">
+                <div className="font-bold text-xs flex items-center gap-1.5 text-red-400 uppercase tracking-wide">⚠️ Overstay Breach Flagged</div>
+                <div className="text-xs mt-1.5 leading-relaxed text-slate-300 font-medium">Your planned segments exceed Schengen short-stay rules by <span className="font-extrabold text-red-400 underline">{totalDaysUsed - 90} days</span> inside this rolling window.</div>
+              </div>
             ) : totalDaysUsed === 90 ? (
-              <div className="w-full bg-amber-950/40 border border-amber-800 text-amber-200 p-4 rounded-xl text-xs flex items-center">Maximum <b>90 days</b> used frame. Any additional stay tomorrow will trigger a compliance alert.</div>
+              <div className="w-full bg-amber-950/40 border border-amber-800/80 text-amber-200 p-4 rounded-2xl flex flex-col justify-center shadow-md">
+                <div className="font-bold text-xs flex items-center gap-1.5 text-amber-400 uppercase tracking-wide">⚠️ Maximum Threshold Met</div>
+                <div className="text-xs mt-1.5 leading-relaxed text-slate-300 font-medium">Exactly <span className="font-extrabold text-amber-400">90 days</span> consumed. You must depart the zone immediately to avoid border system regularities.</div>
+              </div>
             ) : (
-              <div className="w-full bg-emerald-950/40 border border-emerald-200 text-emerald-200 p-4 rounded-xl text-xs flex items-center">Visa compliant track. You hold <b>{90 - totalDaysUsed} safe remaining days</b> inside this 180-day frame.</div>
+              <div className="w-full bg-emerald-950/30 border border-emerald-800/70 text-emerald-200 p-4 rounded-2xl flex flex-col justify-center shadow-md">
+                <div className="font-bold text-xs flex items-center gap-1.5 text-emerald-400 uppercase tracking-wide">✅ Clear Compliance Track</div>
+                <div className="text-xs mt-1.5 leading-relaxed text-slate-300 font-medium">Your schedule is aligned. You retain <span className="font-extrabold text-emerald-400">{90 - totalDaysUsed} legal short-stay days</span> available within this window frame.</div>
+              </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* SEGMENT INPUT FORM */}
-      <div className="bg-slate-800 rounded-2xl border border-slate-700 shadow-xl p-6">
-        <h2 className="text-sm font-bold text-slate-100 mb-4 tracking-tight">➕ Add New Segment Entry</h2>
+      {/* INPUT MANAGEMENT BLOCK */}
+      <div className="bg-slate-800/90 backdrop-blur-md rounded-3xl border border-slate-700/60 shadow-2xl p-6">
+        <h2 className="text-xs font-bold text-slate-300 mb-4 tracking-wider uppercase">➕ Log New Travel Segment</h2>
         <form onSubmit={handleAddTrip} className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-slate-400">Destination Country</label>
-            <input type="text" placeholder="e.g. Poland" value={country} onChange={(e) => setCountry(e.target.value)} className="border border-slate-700 rounded-lg p-2.5 text-sm bg-slate-900 text-slate-100 outline-none focus:border-blue-500" />
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Destination Country</label>
+            <input type="text" placeholder="e.g. Poland, Spain, France" value={country} onChange={(e) => setCountry(e.target.value)} className="border border-slate-700 rounded-xl p-3 text-sm bg-slate-900 text-slate-100 outline-none focus:border-blue-500 transition-colors" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-slate-400">Arrival Date (Entry)</label>
-              <input type="date" value={entryDate} onChange={(e) => setEntryDate(e.target.value)} className="border border-slate-700 rounded-lg p-2.5 text-sm bg-slate-900 text-slate-100 outline-none" />
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Arrival Date (Entry)</label>
+              <input type="date" value={entryDate} onChange={(e) => setEntryDate(e.target.value)} className="border border-slate-700 rounded-xl p-3 text-sm bg-slate-900 text-slate-100 outline-none focus:border-blue-500" />
             </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-slate-400">Departure Date (Exit)</label>
-              <input type="date" value={exitDate} onChange={(e) => setExitDate(e.target.value)} disabled={isOngoing} className="border border-slate-700 rounded-lg p-2.5 text-sm bg-slate-900 text-slate-100 disabled:bg-slate-800 disabled:text-slate-500" />
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">Departure Date (Exit)</label>
+              <input type="date" value={exitDate} onChange={(e) => setExitDate(e.target.value)} disabled={isOngoing} className="border border-slate-700 rounded-xl p-3 text-sm bg-slate-900 text-slate-100 outline-none focus:border-blue-500 disabled:bg-slate-800/50 disabled:text-slate-500" />
             </div>
           </div>
-          <label className="flex items-center gap-2 text-xs font-semibold text-slate-400 cursor-pointer mt-1">
-            <input type="checkbox" checked={isOngoing} onChange={(e) => { setIsOngoing(e.target.checked); if(e.target.checked) setExitDate(""); }} className="rounded border-slate-600 bg-slate-900 text-blue-500 w-4 h-4" />
-            Still inside Schengen zone
+          <label className="flex items-center gap-2.5 text-xs font-bold text-slate-400 cursor-pointer mt-1 select-none">
+            <input type="checkbox" checked={isOngoing} onChange={(e) => { setIsOngoing(e.target.checked); if(e.target.checked) setExitDate(""); }} className="rounded border-slate-600 bg-slate-900 text-blue-500 w-4 h-4 focus:ring-0 focus:ring-offset-0" />
+            Current active stay / Still inside Schengen zone boundary
           </label>
-          <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg p-3 font-bold text-sm shadow-sm transition-colors mt-2">Append to Log Timeline</button>
+          <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl p-3.5 font-bold text-sm shadow-md transition-colors mt-2 tracking-wide uppercase">Append to Timeline Profile</button>
         </form>
       </div>
 
-      {/* SEGMENT VISUAL ARCHIVE CONTAINER */}
-      <div className="bg-slate-800 rounded-2xl border border-slate-700 shadow-xl p-6">
-        <h2 className="text-sm font-bold text-slate-100 mb-4 tracking-tight">📋 Logged Stay Segments</h2>
-        <div className="flex flex-col gap-2">
+      {/* SEGMENTS WORKSPACE HISTORY LOG */}
+      <div className="bg-slate-800/90 backdrop-blur-md rounded-3xl border border-slate-700/60 shadow-2xl p-6">
+        <h2 className="text-xs font-bold text-slate-300 mb-4 tracking-wider uppercase">📋 Active Logged Segments Archive</h2>
+        <div className="flex flex-col gap-2.5">
           {processedTrips.map((trip) => (
-            <div key={trip.idx} className="flex justify-between items-center bg-slate-900 border border-slate-700 rounded-xl p-4">
+            <div key={trip.idx} className="flex justify-between items-center bg-slate-900/50 border border-slate-700/40 rounded-2xl p-4 hover:border-slate-600/60 transition-all">
               <div>
-                <div className="font-bold text-slate-200 text-sm flex items-center gap-2">
+                <div className="font-extrabold text-white text-sm flex items-center gap-2">
                   {trip.country}
-                  {trip.ongoing && <span className="bg-blue-900/60 text-blue-300 border border-blue-700 font-bold text-[9px] px-2 py-0.5 rounded-full">Active</span>}
+                  {trip.ongoing && <span className="bg-blue-500/20 text-blue-400 border border-blue-500/30 font-bold text-[8px] px-2 py-0.5 rounded-full uppercase tracking-widest">Ongoing</span>}
                 </div>
-                <div className="text-xs text-slate-400 font-medium mt-1">{formatDisplayDate(trip.entry)} — {trip.ongoing ? 'Ongoing Stay' : formatDisplayDate(trip.exit)}</div>
+                <div className="text-xs text-slate-400 font-medium mt-1">{formatDisplayDate(trip.entry)} — {trip.ongoing ? 'Active Stay Track' : formatDisplayDate(trip.exit)}</div>
               </div>
               <div className="flex items-center gap-3">
-                <span className="bg-slate-800 text-slate-300 font-bold text-xs px-2.5 py-1 rounded-md">{trip.duration} Days</span>
-                <button type="button" onClick={() => setTrips(trips.filter((_, i) => i !== trip.idx))} className="text-slate-500 hover:text-red-400 p-1.5 text-md transition-colors">🗑️</button>
+                <span className="bg-slate-800 border border-slate-700/60 text-slate-300 font-bold text-xs px-3 py-1.5 rounded-xl shadow-sm">{trip.duration} Days</span>
+                <button type="button" onClick={() => setTrips(trips.filter((_, i) => i !== trip.idx))} className="text-slate-500 hover:text-red-400 p-1.5 rounded-xl hover:bg-red-500/10 transition-all">🗑️</button>
               </div>
             </div>
           ))}
