@@ -102,6 +102,23 @@ export default function App() {
     e.preventDefault();
     if (!entryDate || (!exitDate && !isOngoing)) return alert("Please fill in dates.");
 
+    const formattedInputCountry = country.trim();
+    
+    // STRICT VALIDATION BARRIER: Verify the text exactly matches our official master country index array list
+    const isKnownState = schengenCountries.some(
+      c => c.toLowerCase() === formattedInputCountry.toLowerCase()
+    );
+
+    if (!isKnownState) {
+      alert(`❌ Invalid Country Entry!\n\n"${formattedInputCountry}" is not recognized. You must choose an official Schengen or EU Member State from our dropdown list suggestion box.`);
+      return; // Halt form submission right here
+    }
+
+    // Auto-align typed text case matching with database casing layout index configuration
+    const verifiedCountryName = schengenCountries.find(
+      c => c.toLowerCase() === formattedInputCountry.toLowerCase()
+    );
+
     const newStart = parseLocalDate(entryDate);
     const newEnd = isOngoing ? new Date(2099, 11, 31) : parseLocalDate(exitDate);
 
@@ -123,7 +140,7 @@ export default function App() {
 
     const colors = ['#3b82f6', '#eab308', '#ec4899', '#14b8a6', '#10b981', '#a855f7'];
     const dynamicColor = colors[trips.length % colors.length];
-    setTrips([...trips, { country: country.trim() || "Schengen Country", entry: entryDate, exit: isOngoing ? "" : exitDate, ongoing: isOngoing, color: dynamicColor }]);
+    setTrips([...trips, { country: verifiedCountryName, entry: entryDate, exit: isOngoing ? "" : exitDate, ongoing: isOngoing, color: dynamicColor }]);
     setCountry(""); setEntryDate(""); setExitDate(""); setIsOngoing(false);
   };
   const targetEvalDate = parseLocalDate(evalDate);
@@ -163,7 +180,6 @@ export default function App() {
   const cardStyle = { backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '16px', padding: '24px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)', marginBottom: '20px', boxSizing: 'border-box' };
   const inputStyle = { background: '#0f172a', border: '1px solid #475569', color: '#f8fafc', padding: '8px 12px', borderRadius: '8px', fontSize: '14px', outline: 'none' };
 
-  // INJECT LOCAL STYLES TO INVERT NATIVE PICKER BUTTONS INTO PURE WHITE
   const inlineCalendarStyles = `
     input[type="date"]::-webkit-calendar-picker-indicator {
       filter: invert(1);
