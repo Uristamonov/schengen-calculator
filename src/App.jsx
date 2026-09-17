@@ -192,7 +192,7 @@ export default function App() {
 
         {/* LOG NEW ENTRY FORM */}
         <div style={cardStyle}>
-          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>➕ Add New Segment Entry</h2>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>➕ Add New Stay</h2>
           <form onSubmit={handleAddTrip}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '14px' }}>
               <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Destination Country</label>
@@ -218,10 +218,10 @@ export default function App() {
 
         {/* WORKSPACE HISTORY LOG LOG */}
         <div style={cardStyle}>
-          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>📋 Logged Stay Segments</h2>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>📋 Logged Stays</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {processedTrips.length === 0 ? (
-              <div style={{ textAlign: 'center', color: '#475569', fontSize: '13px', padding: '20px 0' }}>No travel segments currently logged in this browser session.</div>
+              <div style={{ textAlign: 'center', color: '#475569', fontSize: '13px', padding: '20px 0' }}>No stays currently logged in this browser session.</div>
             ) : (
               processedTrips.map((trip) => (
                 <div key={trip.idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0f172a', border: '1px solid #334155', padding: '14px', borderRadius: '12px' }}>
