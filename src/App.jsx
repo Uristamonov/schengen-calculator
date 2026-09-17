@@ -110,7 +110,6 @@ export default function App() {
       return;
     }
 
-    // UPDATED VALIDATOR LOOP: Swapped to strict (< and >) symbols to seamlessly accept consecutive transit days
     for (let i = 0; i < trips.length; i++) {
       const existingTrip = trips[i];
       const existStart = parseLocalDate(existingTrip.entry);
@@ -164,8 +163,21 @@ export default function App() {
   const cardStyle = { backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '16px', padding: '24px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)', marginBottom: '20px', boxSizing: 'border-box' };
   const inputStyle = { background: '#0f172a', border: '1px solid #475569', color: '#f8fafc', padding: '8px 12px', borderRadius: '8px', fontSize: '14px', outline: 'none' };
 
+  // INJECT LOCAL STYLES TO INVERT NATIVE PICKER BUTTONS INTO PURE WHITE
+  const inlineCalendarStyles = `
+    input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+      cursor: pointer;
+      opacity: 0.8;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator:hover {
+      opacity: 1;
+    }
+  `;
+
   return (
     <div style={{ backgroundColor: '#0f172a', minHeight: '100vh', padding: '20px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', alignItems: 'center', fontFamily: 'system-ui, sans-serif', width: '100%', boxSizing: 'border-box' }}>
+      <style>{inlineCalendarStyles}</style>
       <div style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '20px', boxSizing: 'border-box' }}>
         
         {/* GRAPHICAL MONITOR PANEL */}
@@ -268,7 +280,7 @@ export default function App() {
               )}
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
+            <div style={{ gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px', display: 'grid' }}>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Arrival Date (Entry)</label>
                 <input type="date" min="2026-01-01" max="2026-12-31" onKeyDown={handleDateKeyDown} value={entryDate} onChange={(e) => setEntryDate(e.target.value)} style={{...inputStyle, width:'100%', boxSizing:'border-box'}} />
