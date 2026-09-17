@@ -40,7 +40,7 @@ export default function App() {
   const handleImportData = (e) => {
     const fileReader = new FileReader();
     if (!e.target.files || e.target.files.length === 0) return;
-    fileReader.readAsText(e.target.files[0], "UTF-8");
+    fileReader.readAsText(e.target.files, "UTF-8");
     fileReader.onload = (event) => {
       try {
         const parsedData = JSON.parse(event.target.result);
@@ -80,13 +80,22 @@ export default function App() {
     setEvalDate(`${y}-${m}-${d}`);
   };
 
-  // OVERLAP PROTECTION ENGINE: Strict chronologic cross-intersection validation block
+  // 4-DIGIT YEAR INTERCEPTOR: Intercepts typos and halts input if year exceeds 4 digits
+  const handleDateKeyDown = (e) => {
+    const value = e.target.value; // Format: YYYY-MM-DD
+    if (value && value.split('-')[0].length >= 4) {
+      // Allow navigation/delete keys, block numbers
+      if (e.key >= '0' && e.key <= '9') {
+        e.preventDefault();
+      }
+    }
+  };
+
   const handleAddTrip = (e) => {
     e.preventDefault();
     if (!entryDate || (!exitDate && !isOngoing)) return alert("Please fill in dates.");
 
     const newStart = parseLocalDate(entryDate);
-    // Use an exceptionally far future date if ongoing to cover lookahead boundaries safely
     const newEnd = isOngoing ? new Date(2099, 11, 31) : parseLocalDate(exitDate);
 
     if (newEnd < newStart) {
@@ -94,16 +103,15 @@ export default function App() {
       return;
     }
 
-    // Scan existing logs for scheduling clashes
+    // Safety overlap validator loops
     for (let i = 0; i < trips.length; i++) {
       const existingTrip = trips[i];
       const existStart = parseLocalDate(existingTrip.entry);
       const existEnd = existingTrip.ongoing ? new Date(2099, 11, 31) : parseLocalDate(existingTrip.exit);
 
-      // Check if windows intersect: (StartA <= EndB) && (EndA >= StartB)
       if (newStart <= existEnd && newEnd >= existStart) {
         alert(`❌ Scheduling Clash Detected!\n\nYour entered window overlaps with an existing logged stay:\n📍 Country: ${existingTrip.country}\n📅 Dates: ${formatDisplayDate(existingTrip.entry)} — ${existingTrip.ongoing ? 'Ongoing' : formatDisplayDate(existingTrip.exit)}`);
-        return; // Halt execution instantly
+        return;
       }
     }
 
@@ -166,7 +174,7 @@ export default function App() {
           
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '16px 0', background: '#0f172a', padding: '12px', borderRadius: '12px', border: '1px solid #334155' }}>
             <span style={{ fontSize: '12px', fontWeight: '700', color: '#94a3b8' }}>Evaluation Date: {formatDisplayDate(evalDate)}</span>
-            <input type="date" value={evalDate} onChange={(e) => handleDatePickerChange(e.target.value)} style={inputStyle} />
+            <input type="date" min="2026-01-01" max="2026-12-31" onKeyDown={handleDateKeyDown} value={evalDate} onChange={(e) => handleDatePickerChange(e.target.value)} style={inputStyle} />
           </div>
 
           {/* 4X TALLER VISUAL GRAPHICAL TIMELINE */}
@@ -224,11 +232,11 @@ export default function App() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px' }}>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Arrival Date (Entry)</label>
-                <input type="date" value={entryDate} onChange={(e) => setEntryDate(e.target.value)} style={{...inputStyle, width:'100%', boxSizing:'border-box'}} />
+                <input type="date" min="2026-01-01" max="2026-12-31" onKeyDown={handleDateKeyDown} value={entryDate} onChange={(e) => setEntryDate(e.target.value)} style={{...inputStyle, width:'100%', boxSizing:'border-box'}} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Departure Date (Exit)</label>
-                <input type="date" value={exitDate} onChange={(e) => setExitDate(e.target.value)} disabled={isOngoing} style={{...inputStyle, width:'100%', boxSizing:'border-box'}} />
+                <input type="date" min="2026-01-01" max="2026-12-31" onKeyDown={handleDateKeyDown} value={exitDate} onChange={(e) => setExitDate(e.target.value)} disabled={isOngoing} style={{...inputStyle, width:'100%', boxSizing:'border-box'}} />
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '14px' }}>
