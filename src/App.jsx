@@ -23,22 +23,6 @@ export default function App() {
   const [exitDate, setExitDate] = useState("");
   const [isOngoing, setIsOngoing] = useState(false);
 
-  // AUTOMATIC THUMBNAIL INJECTION: Fixed array link parsing error
-  useEffect(() => {
-    try {
-      let link = document.querySelector("link[rel*='icon']");
-      if (!link) {
-        link = document.createElement('link');
-        link.rel = 'icon';
-      }
-      link.type = 'image/svg+xml';
-      link.href = "data:image/svg+xml,%3Csvg xmlns='http://w3.org' width='810' height='540' viewBox='0 0 810 540'%3E%3Cpath fill='%23039' d='M0 0h810v540H0z'/%3E%3Cg fill='%23fc0' transform='matrix%2830 0 0 30 405 270%29'%3E%3Cg id='s'%3E%3Cg id='c'%3E%3Cpath id='t' d='M0-1l.3 1h-.6z'/%3E%3Cuse href='%23t' transform='scale%281 -1%29'/%3E%3C/g%3E%3Cuse href='%23c' transform='rotate%2872%29'/%3E%3C/g%3E%3Cuse href='%23c' transform='rotate%28144%29'/%3E%3Cuse href='%23s' transform='rotate%2836%29'/%3E%3Cuse href='%23s' transform='rotate%28108%29'/%3E%3C/g%3E%3Cg fill='%23fc0' transform='matrix%28-30 0 0 30 405 270%29'%3E%3Cuse href='%23s' transform='rotate%2872%29'/%3E%3Cuse href='%23s' transform='rotate%28144%29'/%3E%3Cuse href='%23c' transform='rotate%2836%29'/%3E%3Cuse href='%23c' transform='rotate%28108%29'/%3E%3C/g%3E%3C/svg%3E";
-      document.head.appendChild(link);
-    } catch (e) {
-      console.error(e);
-    }
-  }, []);
-
   useEffect(() => {
     localStorage.setItem('schengen_graphical_timeline_v4', JSON.stringify(trips));
   }, [trips]);
@@ -86,6 +70,7 @@ export default function App() {
     const diffDays = Math.round((parseLocalDate(isoVal) - timelineStart) / 86400000);
     setSliderValue(Math.max(0, Math.min(totalTimelineDays, diffDays)));
   };
+
   const handleSliderChange = (val) => {
     const numericVal = parseInt(val, 10);
     setSliderValue(numericVal);
@@ -95,15 +80,38 @@ export default function App() {
     setEvalDate(`${y}-${m}-${d}`);
   };
 
+  // OVERLAP PROTECTION ENGINE: Strict chronologic cross-intersection validation block
   const handleAddTrip = (e) => {
     e.preventDefault();
     if (!entryDate || (!exitDate && !isOngoing)) return alert("Please fill in dates.");
+
+    const newStart = parseLocalDate(entryDate);
+    // Use an exceptionally far future date if ongoing to cover lookahead boundaries safely
+    const newEnd = isOngoing ? new Date(2099, 11, 31) : parseLocalDate(exitDate);
+
+    if (newEnd < newStart) {
+      alert("Error: Departure date cannot be earlier than the arrival date.");
+      return;
+    }
+
+    // Scan existing logs for scheduling clashes
+    for (let i = 0; i < trips.length; i++) {
+      const existingTrip = trips[i];
+      const existStart = parseLocalDate(existingTrip.entry);
+      const existEnd = existingTrip.ongoing ? new Date(2099, 11, 31) : parseLocalDate(existingTrip.exit);
+
+      // Check if windows intersect: (StartA <= EndB) && (EndA >= StartB)
+      if (newStart <= existEnd && newEnd >= existStart) {
+        alert(`❌ Scheduling Clash Detected!\n\nYour entered window overlaps with an existing logged stay:\n📍 Country: ${existingTrip.country}\n📅 Dates: ${formatDisplayDate(existingTrip.entry)} — ${existingTrip.ongoing ? 'Ongoing' : formatDisplayDate(existingTrip.exit)}`);
+        return; // Halt execution instantly
+      }
+    }
+
     const colors = ['#3b82f6', '#eab308', '#ec4899', '#14b8a6', '#10b981', '#a855f7'];
     const dynamicColor = colors[trips.length % colors.length];
     setTrips([...trips, { country: country.trim() || "Schengen Country", entry: entryDate, exit: isOngoing ? "" : exitDate, ongoing: isOngoing, color: dynamicColor }]);
     setCountry(""); setEntryDate(""); setExitDate(""); setIsOngoing(false);
   };
-
   const targetEvalDate = parseLocalDate(evalDate);
   const windowStart = new Date(targetEvalDate);
   windowStart.setDate(windowStart.getDate() - 179);
@@ -143,7 +151,7 @@ export default function App() {
         <div style={cardStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '4px' }}>
             <div>
-              <h1 style={{ fontSize: '24px', fonttext: '800', color: '#f8fafc', margin: 0, fontWeight: '800' }}>🇪🇺 Schengen Short-Stay Monitor</h1>
+              <h1 style={{ fontSize: '24px', color: '#f8fafc', margin: 0, fontWeight: '800' }}>🇪🇺 Schengen Short-Stay Monitor</h1>
               <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0 }}>Interactive 90/180-day rolling evaluation engine</p>
             </div>
             
