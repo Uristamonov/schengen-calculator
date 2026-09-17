@@ -7,7 +7,6 @@ export default function App() {
 
   const initialDataSet = [];
 
-  // Official database array of current Schengen/EU Member States for auto-fill matching
   const schengenCountries = [
     "Austria", "Belgium", "Bulgaria", "Croatia", "Czech Republic", "Denmark", 
     "Estonia", "Finland", "France", "Germany", "Greece", "Hungary", "Iceland", 
@@ -50,7 +49,7 @@ export default function App() {
   const handleImportData = (e) => {
     const fileReader = new FileReader();
     if (!e.target.files || e.target.files.length === 0) return;
-    fileReader.readAsText(e.target.files[0], "UTF-8");
+    fileReader.readAsText(e.target.files, "UTF-8");
     fileReader.onload = (event) => {
       try {
         const parsedData = JSON.parse(event.target.result);
@@ -111,12 +110,13 @@ export default function App() {
       return;
     }
 
+    // UPDATED VALIDATOR LOOP: Swapped to strict (< and >) symbols to seamlessly accept consecutive transit days
     for (let i = 0; i < trips.length; i++) {
       const existingTrip = trips[i];
       const existStart = parseLocalDate(existingTrip.entry);
       const existEnd = existingTrip.ongoing ? new Date(2099, 11, 31) : parseLocalDate(existingTrip.exit);
 
-      if (newStart <= existEnd && newEnd >= existStart) {
+      if (newStart < existEnd && newEnd > existStart) {
         alert(`❌ Scheduling Clash Detected!\n\nYour entered window overlaps with an existing logged stay:\n📍 Country: ${existingTrip.country}\n📅 Dates: ${formatDisplayDate(existingTrip.entry)} — ${existingTrip.ongoing ? 'Ongoing' : formatDisplayDate(existingTrip.exit)}`);
         return;
       }
@@ -151,7 +151,6 @@ export default function App() {
     return { ...trip, duration: segmentDuration, left: pctStart, width: pctWidth, idx };
   });
 
-  // Filter country data array based on user input text
   const filteredSuggestions = schengenCountries.filter(c => 
     c.toLowerCase().includes(country.toLowerCase()) && 
     country.trim() !== "" &&
@@ -211,7 +210,6 @@ export default function App() {
           </div>
 
           <input type="range" min="0" max={totalTimelineDays} value={sliderValue} onChange={(e) => handleSliderChange(e.target.value)} style={{ width: '100%', height: '6px', background: '#334155', borderRadius: '4px', outline: 'none', cursor: 'pointer', marginBottom: '16px' }} />
-
           <div style={{ display: 'grid', gridTemplateColumns: '130px 1fr', gap: '16px', marginTop: '16px' }}>
             <div style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase' }}>Days Used</h3>
@@ -235,12 +233,12 @@ export default function App() {
             )}
           </div>
         </div>
+
         {/* LOG NEW ENTRY FORM */}
         <div style={cardStyle}>
           <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>➕ Add New Travel Segment</h2>
           <form onSubmit={handleAddTrip}>
             
-            {/* DESTINATION COUNTRY INPUT WITH SUGGESTIONS */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '14px', position: 'relative' }}>
               <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Destination Country</label>
               <input 
@@ -253,7 +251,6 @@ export default function App() {
                 style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} 
               />
               
-              {/* INTERACTIVE SUGGESTION DROPDOWN BOX */}
               {showSuggestions && filteredSuggestions.length > 0 && (
                 <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e293b', border: '1px solid #475569', borderRadius: '8px', marginTop: '4px', zIndex: 10, maxHeight: '150px', overflowY: 'auto', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)' }}>
                   {filteredSuggestions.map((suggestion, sIdx) => (
