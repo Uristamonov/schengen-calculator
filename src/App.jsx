@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
 export default function App() {
-  // Expanded chronological horizon anchoring both 2026 and 2027 years smoothly
-  const timelineStart = new Date(2026, 0, 1);   // Jan 1, 2026
-  const timelineEnd = new Date(2027, 11, 31);   // Dec 31, 2027
+  // Tightened 18-Month Chronological Horizon (6 Quarters total)
+  const timelineStart = new Date(2026, 0, 1);   // January 1, 2026
+  const timelineEnd = new Date(2027, 5, 30);    // June 30, 2027 (End of Q2 2027)
   const totalTimelineDays = Math.round((timelineEnd - timelineStart) / 86400000);
 
   const initialDataSet = [];
@@ -223,7 +223,7 @@ export default function App() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '4px' }}>
             <div>
               <h1 style={{ fontSize: '24px', color: '#f8fafc', margin: 0, fontWeight: '800' }}>🇪🇺 Schengen Short-Stay Monitor</h1>
-              <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0 }}>Interactive 2026–2027 multi-year evaluation engine</p>
+              <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0 }}>Interactive 18-Month Lookahead Timeline</p>
             </div>
             
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -237,23 +237,21 @@ export default function App() {
           
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '16px 0', background: '#0f172a', padding: '12px', borderRadius: '12px', border: '1px solid #334155' }}>
             <span style={{ fontSize: '12px', fontWeight: '700', color: '#94a3b8' }}>Evaluation Date: {formatDisplayDate(evalDate)}</span>
-            <input type="date" min="2026-01-01" max="2027-12-31" onKeyDown={handleDateKeyDown} value={evalDate} onChange={(e) => handleDatePickerChange(e.target.value)} style={inputStyle} />
+            <input type="date" min="2026-01-01" max="2027-06-30" onKeyDown={handleDateKeyDown} value={evalDate} onChange={(e) => handleDatePickerChange(e.target.value)} style={inputStyle} />
           </div>
 
-          {/* 4X TALLER VISUAL GRAPHICAL TIMELINE FOR 2026 & 2027 */}
+          {/* RE-INDEXED 6-QUARTER VISUAL GRAPHICAL TIMELINE CANVAS */}
           <div style={{ position: 'relative', height: '160px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', margin: '24px 0 16px 0', overflow: 'hidden', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.5)' }}>
             
-            {/* 2026 Chronological Quarter Columns */}
-            <div style={{ position: 'absolute', left: '0%', width: '12.5%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'26 Q1</div>
-            <div style={{ position: 'absolute', left: '12.5%', width: '12.5%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'26 Q2</div>
-            <div style={{ position: 'absolute', left: '25%', width: '12.5%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'26 Q3</div>
-            <div style={{ position: 'absolute', left: '37.5%', width: '12.5%', borderRight: '2px solid #334155', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#64748b', fontWeight: 'black' }}>'26 Q4</div>
+            {/* 2026 Proportional Guideline Columns (16.66% width slices) */}
+            <div style={{ position: 'absolute', left: '0%', width: '16.66%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'26 Q1</div>
+            <div style={{ position: 'absolute', left: '16.66%', width: '16.66%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'26 Q2</div>
+            <div style={{ position: 'absolute', left: '33.33%', width: '16.66%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'26 Q3</div>
+            <div style={{ position: 'absolute', left: '50%', width: '16.66%', borderRight: '2px solid #334155', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#64748b', fontWeight: 'black' }}>'26 Q4</div>
 
-            {/* 2027 Chronological Quarter Columns */}
-            <div style={{ position: 'absolute', left: '50%', width: '12.5%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'27 Q1</div>
-            <div style={{ position: 'absolute', left: '62.5%', width: '12.5%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'27 Q2</div>
-            <div style={{ position: 'absolute', left: '75%', width: '12.5%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'27 Q3</div>
-            <div style={{ position: 'absolute', left: '87.5%', width: '12.5%', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'27 Q4</div>
+            {/* 2027 Proportional Guideline Columns */}
+            <div style={{ position: 'absolute', left: '66.66%', width: '16.66%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'27 Q1</div>
+            <div style={{ position: 'absolute', left: '83.33%', width: '16.66%', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'27 Q2</div>
 
             <div style={{ position: 'absolute', left: `${windowLeft}%`, width: `${windowWidth}%`, top: 0, bottom: 0, background: 'rgba(59,130,246,0.12)', borderLeft: '1px dashed #3b82f6', borderRight: '1px dashed #3b82f6', zIndex: 1 }} />
             
@@ -344,11 +342,11 @@ export default function App() {
             <div style={{ gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px', display: 'grid' }}>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Arrival Date (Entry)</label>
-                <input type="date" min="2026-01-01" max="2027-12-31" onKeyDown={handleDateKeyDown} value={entryDate} onChange={(e) => setEntryDate(e.target.value)} style={{...inputStyle, width:'100%', boxSizing:'border-box'}} />
+                <input type="date" min="2026-01-01" max="2027-06-30" onKeyDown={handleDateKeyDown} value={entryDate} onChange={(e) => setEntryDate(e.target.value)} style={{...inputStyle, width:'100%', boxSizing:'border-box'}} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Departure Date (Exit)</label>
-                <input type="date" min="2026-01-01" max="2027-12-31" onKeyDown={handleDateKeyDown} value={exitDate} onChange={(e) => setExitDate(e.target.value)} disabled={isOngoing} style={{...inputStyle, width:'100%', boxSizing:'border-box'}} />
+                <input type="date" min="2026-01-01" max="2027-06-30" onKeyDown={handleDateKeyDown} value={exitDate} onChange={(e) => setExitDate(e.target.value)} disabled={isOngoing} style={{...inputStyle, width:'100%', boxSizing:'border-box'}} />
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '14px' }}>
