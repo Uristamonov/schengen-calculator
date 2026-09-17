@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
 export default function App() {
-  const timelineStart = new Date(2026, 0, 1);
-  const timelineEnd = new Date(2026, 11, 31);
+  // Expanded chronological horizon anchoring both 2026 and 2027 years smoothly
+  const timelineStart = new Date(2026, 0, 1);   // Jan 1, 2026
+  const timelineEnd = new Date(2027, 11, 31);   // Dec 31, 2027
   const totalTimelineDays = Math.round((timelineEnd - timelineStart) / 86400000);
 
   const initialDataSet = [];
@@ -15,7 +16,7 @@ export default function App() {
     "Slovenia", "Spain", "Sweden", "Switzerland"
   ];
 
-  const [trips, setTrips] = useState(() => {
+  const [trips, setTriTrips] = useState(() => {
     const saved = localStorage.getItem('schengen_graphical_timeline_v4');
     return saved ? JSON.parse(saved) : initialDataSet;
   });
@@ -54,7 +55,7 @@ export default function App() {
       try {
         const parsedData = JSON.parse(event.target.result);
         if (Array.isArray(parsedData)) {
-          setTrips(parsedData);
+          setTriTrips(parsedData);
           alert("Backup data successfully imported and synced!");
         } else {
           alert("Invalid backup file structure.");
@@ -132,7 +133,7 @@ export default function App() {
 
     const colors = ['#3b82f6', '#eab308', '#ec4899', '#14b8a6', '#10b981', '#a855f7'];
     const dynamicColor = colors[trips.length % colors.length];
-    setTrips([...trips, { country: verifiedCountryName, entry: entryDate, exit: isOngoing ? "" : exitDate, ongoing: isOngoing, color: dynamicColor }]);
+    setTriTrips([...trips, { country: verifiedCountryName, entry: entryDate, exit: isOngoing ? "" : exitDate, ongoing: isOngoing, color: dynamicColor }]);
     setCountry(""); setEntryDate(""); setExitDate(""); setIsOngoing(false);
   };
   const targetEvalDate = parseLocalDate(evalDate);
@@ -159,23 +160,18 @@ export default function App() {
     return { ...trip, duration: segmentDuration, left: pctStart, width: pctWidth, idx };
   });
 
-  // COMPLEX LOOKAHEAD PREDICTIVE INTELLIGENCE ENGINE LOGIC
+  // LOOKAHEAD FORECASTING ENGINE LOOP
   let nextRefreshDate = null;
   if (totalDaysUsed >= 90) {
     let checkDate = new Date(targetEvalDate);
-    
-    // Simulate day-by-day looking forward up to 180 days into the future
     for (let dayOffset = 1; dayOffset <= 180; dayOffset++) {
       checkDate.setDate(checkDate.getDate() + 1);
-      
       let simulatedStart = new Date(checkDate);
       simulatedStart.setDate(simulatedStart.getDate() - 179);
       
       let simulatedDays = 0;
       trips.forEach(t => {
         const start = parseLocalDate(t.entry);
-        // CRITICAL ONGOING LOGIC: If a stay is ongoing, it virtually caps on the current evaluation date
-        // because the user must exit for days to start rolling off!
         let end = t.ongoing ? targetEvalDate : parseLocalDate(t.exit);
         if (end > checkDate) end = checkDate;
         
@@ -227,7 +223,7 @@ export default function App() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '4px' }}>
             <div>
               <h1 style={{ fontSize: '24px', color: '#f8fafc', margin: 0, fontWeight: '800' }}>🇪🇺 Schengen Short-Stay Monitor</h1>
-              <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0 }}>Interactive 90/180-day rolling evaluation engine</p>
+              <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0 }}>Interactive 2026–2027 multi-year evaluation engine</p>
             </div>
             
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -241,14 +237,23 @@ export default function App() {
           
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '16px 0', background: '#0f172a', padding: '12px', borderRadius: '12px', border: '1px solid #334155' }}>
             <span style={{ fontSize: '12px', fontWeight: '700', color: '#94a3b8' }}>Evaluation Date: {formatDisplayDate(evalDate)}</span>
-            <input type="date" min="2026-01-01" max="2026-12-31" onKeyDown={handleDateKeyDown} value={evalDate} onChange={(e) => handleDatePickerChange(e.target.value)} style={inputStyle} />
+            <input type="date" min="2026-01-01" max="2027-12-31" onKeyDown={handleDateKeyDown} value={evalDate} onChange={(e) => handleDatePickerChange(e.target.value)} style={inputStyle} />
           </div>
 
+          {/* 4X TALLER VISUAL GRAPHICAL TIMELINE FOR 2026 & 2027 */}
           <div style={{ position: 'relative', height: '160px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', margin: '24px 0 16px 0', overflow: 'hidden', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.5)' }}>
-            <div style={{ position: 'absolute', left: '0%', width: '25%', borderRight: '1px solid #1e293b', top: 0, bottom: 0, padding: '6px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2026 Q1</div>
-            <div style={{ position: 'absolute', left: '25%', width: '25%', borderRight: '1px solid #1e293b', top: 0, bottom: 0, padding: '6px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2026 Q2</div>
-            <div style={{ position: 'absolute', left: '50%', width: '25%', borderRight: '1px solid #1e293b', top: 0, bottom: 0, padding: '6px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2026 Q3</div>
-            <div style={{ position: 'absolute', left: '75%', width: '25%', top: 0, bottom: 0, padding: '6px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2026 Q4</div>
+            
+            {/* 2026 Chronological Quarter Columns */}
+            <div style={{ position: 'absolute', left: '0%', width: '12.5%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'26 Q1</div>
+            <div style={{ position: 'absolute', left: '12.5%', width: '12.5%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'26 Q2</div>
+            <div style={{ position: 'absolute', left: '25%', width: '12.5%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'26 Q3</div>
+            <div style={{ position: 'absolute', left: '37.5%', width: '12.5%', borderRight: '2px solid #334155', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#64748b', fontWeight: 'black' }}>'26 Q4</div>
+
+            {/* 2027 Chronological Quarter Columns */}
+            <div style={{ position: 'absolute', left: '50%', width: '12.5%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'27 Q1</div>
+            <div style={{ position: 'absolute', left: '62.5%', width: '12.5%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'27 Q2</div>
+            <div style={{ position: 'absolute', left: '75%', width: '12.5%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'27 Q3</div>
+            <div style={{ position: 'absolute', left: '87.5%', width: '12.5%', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'27 Q4</div>
 
             <div style={{ position: 'absolute', left: `${windowLeft}%`, width: `${windowWidth}%`, top: 0, bottom: 0, background: 'rgba(59,130,246,0.12)', borderLeft: '1px dashed #3b82f6', borderRight: '1px dashed #3b82f6', zIndex: 1 }} />
             
@@ -287,7 +292,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* PREDICTIVE ENTRY LOOKAHEAD ENGINE STATUS DISPLAY */}
+        {/* LOOKAHEAD BANNER */}
         {totalDaysUsed >= 90 && (
           <div style={{ ...cardStyle, background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', border: '1px solid #3b82f6' }}>
             <h2 style={{ fontSize: '11px', fontWeight: '800', color: '#3b82f6', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.05em' }}>🔮 Predictive Entry Lookahead</h2>
@@ -339,11 +344,11 @@ export default function App() {
             <div style={{ gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px', display: 'grid' }}>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Arrival Date (Entry)</label>
-                <input type="date" min="2026-01-01" max="2026-12-31" onKeyDown={handleDateKeyDown} value={entryDate} onChange={(e) => setEntryDate(e.target.value)} style={{...inputStyle, width:'100%', boxSizing:'border-box'}} />
+                <input type="date" min="2026-01-01" max="2027-12-31" onKeyDown={handleDateKeyDown} value={entryDate} onChange={(e) => setEntryDate(e.target.value)} style={{...inputStyle, width:'100%', boxSizing:'border-box'}} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Departure Date (Exit)</label>
-                <input type="date" min="2026-01-01" max="2026-12-31" onKeyDown={handleDateKeyDown} value={exitDate} onChange={(e) => setExitDate(e.target.value)} disabled={isOngoing} style={{...inputStyle, width:'100%', boxSizing:'border-box'}} />
+                <input type="date" min="2026-01-01" max="2027-12-31" onKeyDown={handleDateKeyDown} value={exitDate} onChange={(e) => setExitDate(e.target.value)} disabled={isOngoing} style={{...inputStyle, width:'100%', boxSizing:'border-box'}} />
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '14px' }}>
@@ -375,7 +380,7 @@ export default function App() {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <span style={{ background: '#334155', padding: '4px 8px', borderRadius: '6px', fontSize: '13px', fontWeight: '700', color: '#f1f5f9' }}>{trip.duration} Days</span>
-                    <button type="button" onClick={() => setTrips(trips.filter((_, i) => i !== trip.idx))} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '16px' }}>🗑️</button>
+                    <button type="button" onClick={() => setTriTrips(trips.filter((_, i) => i !== trip.idx))} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '16px' }}>🗑️</button>
                   </div>
                 </div>
               ))
