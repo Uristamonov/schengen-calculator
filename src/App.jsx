@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 
 export default function App() {
-  // Timeline boundaries set strictly to 2026 for tight visual scaling
-  const timelineStart = new Date(2026, 0, 1); // January 1, 2026
-  const timelineEnd = new Date(2026, 11, 31); // December 31, 2026
+  const timelineStart = new Date(2026, 0, 1);
+  const timelineEnd = new Date(2026, 11, 31);
   const totalTimelineDays = Math.round((timelineEnd - timelineStart) / 86400000);
 
-  // Filtered dataset preserving only stays from Jan 1, 2026 onward
   const initialDataSet = [
     { country: "Spain", entry: "2026-04-03", exit: "2026-04-11", ongoing: false, color: '#eab308' },
     { country: "Poland", entry: "2026-06-26", exit: "2026-07-06", ongoing: false, color: '#10b981' },
@@ -32,6 +30,37 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('schengen_graphical_timeline_v3', JSON.stringify(trips));
   }, [trips]);
+
+  // Export Feature: Triggers an immediate clean JSON file generation download
+  const handleExportData = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(trips, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", "schengen_trips_backup.json");
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
+  // Import Feature: Safely parses external backup JSON profiles back into local storage state
+  const handleImportData = (e) => {
+    const fileReader = new FileReader();
+    if (!e.target.files || e.target.files.length === 0) return;
+    fileReader.readAsText(e.target.files[0], "UTF-8");
+    fileReader.onload = (event) => {
+      try {
+        const parsedData = JSON.parse(event.target.result);
+        if (Array.isArray(parsedData)) {
+          setTrips(parsedData);
+          alert("Backup data successfully imported and synced!");
+        } else {
+          alert("Invalid backup file structure.");
+        }
+      } catch (err) {
+        alert("Error parsing file structure.");
+      }
+    };
+  };
 
   const parseLocalDate = (str) => !str ? new Date() : new Date(str + "T00:00:00");
 
@@ -102,32 +131,40 @@ export default function App() {
         
         {/* GRAPHICAL MONITOR PANEL */}
         <div style={cardStyle}>
-          <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#f8fafc', margin: '0 0 4px 0' }}>🇪🇺 Schengen Short-Stay Monitor</h1>
-          <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 20px 0' }}>Interactive 90/180-day rolling evaluation engine</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '4px' }}>
+            <div>
+              <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#f8fafc', margin: 0 }}>🇪🇺 Schengen Short-Stay Monitor</h1>
+              <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0 }}>Interactive 90/180-day rolling evaluation engine</p>
+            </div>
+            
+            {/* PORTABILITY ACTIONS BUTTONS BAR */}
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <button type="button" onClick={handleExportData} style={{ background: '#334155', border: '1px solid #475569', color: '#f8fafc', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase' }} title="Download Backup File">📥 Export</button>
+              <label style={{ background: '#334155', border: '1px solid #475569', color: '#f8fafc', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase' }} title="Upload Backup File">
+                📤 Import
+                <input type="file" accept=".json" onChange={handleImportData} style={{ display: 'none' }} />
+              </label>
+            </div>
+          </div>
           
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', background: '#0f172a', padding: '12px', borderRadius: '12px', border: '1px solid #334155' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '16px 0', background: '#0f172a', padding: '12px', borderRadius: '12px', border: '1px solid #334155' }}>
             <span style={{ fontSize: '12px', fontWeight: '700', color: '#94a3b8' }}>Evaluation Date: {formatDisplayDate(evalDate)}</span>
             <input type="date" value={evalDate} onChange={(e) => handleDatePickerChange(e.target.value)} style={inputStyle} />
           </div>
 
-          {/* VISUAL GRAPHICAL TIMELINE FOR 2026 FOOTPRINT */}
+          {/* VISUAL GRAPHICAL TIMELINE */}
           <div style={{ position: 'relative', height: '160px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', margin: '24px 0 16px 0', overflow: 'hidden', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.5)' }}>
-            
-            {/* 2026 Quarter Guidelines Grid for Clearer Context */}
             <div style={{ position: 'absolute', left: '0%', width: '25%', borderRight: '1px solid #1e293b', top: 0, bottom: 0, padding: '6px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2026 Q1</div>
             <div style={{ position: 'absolute', left: '25%', width: '25%', borderRight: '1px solid #1e293b', top: 0, bottom: 0, padding: '6px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2026 Q2</div>
             <div style={{ position: 'absolute', left: '50%', width: '25%', borderRight: '1px solid #1e293b', top: 0, bottom: 0, padding: '6px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2026 Q3</div>
             <div style={{ position: 'absolute', left: '75%', width: '25%', top: 0, bottom: 0, padding: '6px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2026 Q4</div>
 
-            {/* Rolling Lookback Window (Blue Highlight Block Area) */}
             <div style={{ position: 'absolute', left: `${windowLeft}%`, width: `${windowWidth}%`, top: 0, bottom: 0, background: 'rgba(59,130,246,0.12)', borderLeft: '1px dashed #3b82f6', borderRight: '1px dashed #3b82f6', zIndex: 1 }} />
             
-            {/* Travel Segments Color Blocks */}
             {processedTrips.map((trip) => (
               <div key={trip.idx} style={{ position: 'absolute', left: `${trip.left}%`, width: `${trip.width}%`, top: '24px', bottom: '24px', backgroundColor: trip.color || '#3b82f6', borderRadius: '4px', minWidth: '4px', zIndex: 2, boxShadow: '0 2px 5px rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)' }} title={`${trip.country}: ${trip.duration} days`} />
             ))}
 
-            {/* Target Red Indicator Pin Line */}
             <div style={{ position: 'absolute', left: `${evalMarkerLeft}%`, width: '2px', top: 0, bottom: 0, backgroundColor: '#ef4444', zIndex: 3 }}>
               <div style={{ position: 'absolute', top: 0, left: '-4px', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ef4444', boxShadow: '0 0 8px #ef4444' }} />
               <div style={{ position: 'absolute', bottom: 0, left: '-4px', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ef4444', boxShadow: '0 0 8px #ef4444' }} />
@@ -161,7 +198,7 @@ export default function App() {
         </div>
         {/* LOG NEW ENTRY FORM */}
         <div style={cardStyle}>
-          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>➕ Add New Stay in Schengen Zone</h2>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>➕ Add New Segment Entry</h2>
           <form onSubmit={handleAddTrip}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '14px' }}>
               <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Destination Country</label>
@@ -187,7 +224,7 @@ export default function App() {
 
         {/* TIMELINE HISTORY LOG LOG */}
         <div style={cardStyle}>
-          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>📋 Logged Stays</h2>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>📋 Logged Stay Segments</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {processedTrips.map((trip) => (
               <div key={trip.idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0f172a', border: '1px solid #334155', padding: '14px', borderRadius: '12px' }}>
