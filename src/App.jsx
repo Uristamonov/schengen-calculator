@@ -5,7 +5,6 @@ export default function App() {
   const timelineEnd = new Date(2026, 11, 31);
   const totalTimelineDays = Math.round((timelineEnd - timelineStart) / 86400000);
 
-  // Sanitized to an empty array so public users start with a clean slate
   const initialDataSet = [];
 
   const [trips, setTrips] = useState(() => {
@@ -23,6 +22,22 @@ export default function App() {
   const [entryDate, setEntryDate] = useState("");
   const [exitDate, setExitDate] = useState("");
   const [isOngoing, setIsOngoing] = useState(false);
+
+  // AUTOMATIC THUMBNAIL INJECTION: Forces the browser tab to render the EU Flag instantly
+  useEffect(() => {
+    try {
+      let link = document.querySelector("link[rel*='icon']");
+      if (!link) {
+        link = document.createElement('link');
+        link.type = 'image/svg+xml';
+        link.rel = 'shortcut icon';
+        document.head.appendChild(link);
+      }
+      link.href = 'data:image/svg+xml,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇪🇺</text></svg>';
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('schengen_graphical_timeline_v4', JSON.stringify(trips));
@@ -192,7 +207,7 @@ export default function App() {
 
         {/* LOG NEW ENTRY FORM */}
         <div style={cardStyle}>
-          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>➕ Add New Stay</h2>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>➕ Add New Segment Entry</h2>
           <form onSubmit={handleAddTrip}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '14px' }}>
               <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Destination Country</label>
@@ -218,10 +233,10 @@ export default function App() {
 
         {/* WORKSPACE HISTORY LOG LOG */}
         <div style={cardStyle}>
-          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>📋 Logged Stays</h2>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>📋 Logged Stay Segments</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {processedTrips.length === 0 ? (
-              <div style={{ textAlign: 'center', color: '#475569', fontSize: '13px', padding: '20px 0' }}>No stays currently logged in this browser session.</div>
+              <div style={{ textAlign: 'center', color: '#475569', fontSize: '13px', padding: '20px 0' }}>No travel segments currently logged in this browser session.</div>
             ) : (
               processedTrips.map((trip) => (
                 <div key={trip.idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0f172a', border: '1px solid #334155', padding: '14px', borderRadius: '12px' }}>
