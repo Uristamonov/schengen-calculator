@@ -80,6 +80,7 @@ export default function App() {
     }
     return { ...trip, duration: segmentDuration, idx };
   });
+  JSX
   // Injecting styles directly so the browser cannot ignore them
   const styles = `
     .app-bg { background-color: #0f172a; min-height: 100vh; padding: 20px; color: #cbd5e1; display: flex; justify-content: center; }
