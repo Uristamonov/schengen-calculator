@@ -23,17 +23,17 @@ export default function App() {
   const [exitDate, setExitDate] = useState("");
   const [isOngoing, setIsOngoing] = useState(false);
 
-  // AUTOMATIC THUMBNAIL INJECTION: Forces the browser tab to render the EU Flag instantly
+  // AUTOMATIC THUMBNAIL INJECTION: Fixed array link parsing error
   useEffect(() => {
     try {
       let link = document.querySelector("link[rel*='icon']");
       if (!link) {
         link = document.createElement('link');
-        link.type = 'image/svg+xml';
-        link.rel = 'shortcut icon';
-        document.head.appendChild(link);
+        link.rel = 'icon';
       }
-      link.href = 'data:image/svg+xml,<svg xmlns=%22http://w3.org viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🇪🇺</text></svg>';
+      link.type = 'image/svg+xml';
+      link.href = "data:image/svg+xml,%3Csvg xmlns='http://w3.org' width='810' height='540' viewBox='0 0 810 540'%3E%3Cpath fill='%23039' d='M0 0h810v540H0z'/%3E%3Cg fill='%23fc0' transform='matrix%2830 0 0 30 405 270%29'%3E%3Cg id='s'%3E%3Cg id='c'%3E%3Cpath id='t' d='M0-1l.3 1h-.6z'/%3E%3Cuse href='%23t' transform='scale%281 -1%29'/%3E%3C/g%3E%3Cuse href='%23c' transform='rotate%2872%29'/%3E%3C/g%3E%3Cuse href='%23c' transform='rotate%28144%29'/%3E%3Cuse href='%23s' transform='rotate%2836%29'/%3E%3Cuse href='%23s' transform='rotate%28108%29'/%3E%3C/g%3E%3Cg fill='%23fc0' transform='matrix%28-30 0 0 30 405 270%29'%3E%3Cuse href='%23s' transform='rotate%2872%29'/%3E%3Cuse href='%23s' transform='rotate%28144%29'/%3E%3Cuse href='%23c' transform='rotate%2836%29'/%3E%3Cuse href='%23c' transform='rotate%28108%29'/%3E%3C/g%3E%3C/svg%3E";
+      document.head.appendChild(link);
     } catch (e) {
       console.error(e);
     }
@@ -143,7 +143,7 @@ export default function App() {
         <div style={cardStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '4px' }}>
             <div>
-              <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#f8fafc', margin: 0 }}>🇪🇺 Schengen Short-Stay Monitor</h1>
+              <h1 style={{ fontSize: '24px', fonttext: '800', color: '#f8fafc', margin: 0, fontWeight: '800' }}>🇪🇺 Schengen Short-Stay Monitor</h1>
               <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0 }}>Interactive 90/180-day rolling evaluation engine</p>
             </div>
             
