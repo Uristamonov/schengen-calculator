@@ -3,19 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Schengen Stay Calculator</title>
-    <!-- Inject utility compilation tracking core directly -->
-    <script src="https://tailwindcss.com"></script>
-    <script>
-      // Force utility layout script engine to prioritize processing elements
-      tailwind.config = {
-        theme: {
-          extend: {}
-        }
+    <title>Schengen Short-Stay Monitor</title>
+    <style>
+      /* Force the outermost browser layers to adopt the deep dark background color scheme */
+      html, body {
+        margin: 0;
+        padding: 0;
+        background-color: #0f172a !important;
+        min-height: 100vh;
       }
-    </script>
+    </style>
   </head>
-  <body class="bg-slate-900 min-h-screen">
+  <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
