@@ -5,14 +5,11 @@ export default function App() {
   const timelineEnd = new Date(2026, 11, 31);
   const totalTimelineDays = Math.round((timelineEnd - timelineStart) / 86400000);
 
-  const initialDataSet = [
-    { country: "Spain", entry: "2026-04-03", exit: "2026-04-11", ongoing: false, color: '#eab308' },
-    { country: "Poland", entry: "2026-06-26", exit: "2026-07-06", ongoing: false, color: '#10b981' },
-    { country: "Poland", entry: "2026-07-10", exit: "", ongoing: true, color: '#10b981' }
-  ];
+  // Sanitized to an empty array so public users start with a clean slate
+  const initialDataSet = [];
 
   const [trips, setTrips] = useState(() => {
-    const saved = localStorage.getItem('schengen_graphical_timeline_v3');
+    const saved = localStorage.getItem('schengen_graphical_timeline_v4');
     return saved ? JSON.parse(saved) : initialDataSet;
   });
 
@@ -28,10 +25,9 @@ export default function App() {
   const [isOngoing, setIsOngoing] = useState(false);
 
   useEffect(() => {
-    localStorage.setItem('schengen_graphical_timeline_v3', JSON.stringify(trips));
+    localStorage.setItem('schengen_graphical_timeline_v4', JSON.stringify(trips));
   }, [trips]);
 
-  // Export Feature: Triggers an immediate clean JSON file generation download
   const handleExportData = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(trips, null, 2));
     const downloadAnchor = document.createElement('a');
@@ -42,7 +38,6 @@ export default function App() {
     downloadAnchor.remove();
   };
 
-  // Import Feature: Safely parses external backup JSON profiles back into local storage state
   const handleImportData = (e) => {
     const fileReader = new FileReader();
     if (!e.target.files || e.target.files.length === 0) return;
@@ -76,7 +71,6 @@ export default function App() {
     const diffDays = Math.round((parseLocalDate(isoVal) - timelineStart) / 86400000);
     setSliderValue(Math.max(0, Math.min(totalTimelineDays, diffDays)));
   };
-
   const handleSliderChange = (val) => {
     const numericVal = parseInt(val, 10);
     setSliderValue(numericVal);
@@ -125,6 +119,7 @@ export default function App() {
 
   const cardStyle = { backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '16px', padding: '24px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)', marginBottom: '20px', boxSizing: 'border-box' };
   const inputStyle = { background: '#0f172a', border: '1px solid #475569', color: '#f8fafc', padding: '8px 12px', borderRadius: '8px', fontSize: '14px', outline: 'none' };
+
   return (
     <div style={{ backgroundColor: '#0f172a', minHeight: '100vh', padding: '20px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', alignItems: 'center', fontFamily: 'system-ui, sans-serif', width: '100%', boxSizing: 'border-box' }}>
       <div style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '20px', boxSizing: 'border-box' }}>
@@ -137,7 +132,6 @@ export default function App() {
               <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0 }}>Interactive 90/180-day rolling evaluation engine</p>
             </div>
             
-            {/* PORTABILITY ACTIONS BUTTONS BAR */}
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <button type="button" onClick={handleExportData} style={{ background: '#334155', border: '1px solid #475569', color: '#f8fafc', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase' }} title="Download Backup File">📥 Export</button>
               <label style={{ background: '#334155', border: '1px solid #475569', color: '#f8fafc', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase' }} title="Upload Backup File">
@@ -152,7 +146,7 @@ export default function App() {
             <input type="date" value={evalDate} onChange={(e) => handleDatePickerChange(e.target.value)} style={inputStyle} />
           </div>
 
-          {/* VISUAL GRAPHICAL TIMELINE */}
+          {/* 4X TALLER VISUAL GRAPHICAL TIMELINE */}
           <div style={{ position: 'relative', height: '160px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', margin: '24px 0 16px 0', overflow: 'hidden', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.5)' }}>
             <div style={{ position: 'absolute', left: '0%', width: '25%', borderRight: '1px solid #1e293b', top: 0, bottom: 0, padding: '6px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2026 Q1</div>
             <div style={{ position: 'absolute', left: '25%', width: '25%', borderRight: '1px solid #1e293b', top: 0, bottom: 0, padding: '6px', fontSize: '9px', color: '#475569', fontWeight: 'bold' }}>2026 Q2</div>
@@ -172,7 +166,6 @@ export default function App() {
           </div>
 
           <input type="range" min="0" max={totalTimelineDays} value={sliderValue} onChange={(e) => handleSliderChange(e.target.value)} style={{ width: '100%', height: '6px', background: '#334155', borderRadius: '4px', outline: 'none', cursor: 'pointer', marginBottom: '16px' }} />
-
           <div style={{ display: 'grid', gridTemplateColumns: '130px 1fr', gap: '16px', marginTop: '16px' }}>
             <div style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase' }}>Days Used</h3>
@@ -196,6 +189,7 @@ export default function App() {
             )}
           </div>
         </div>
+
         {/* LOG NEW ENTRY FORM */}
         <div style={cardStyle}>
           <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>➕ Add New Segment Entry</h2>
@@ -222,28 +216,32 @@ export default function App() {
           </form>
         </div>
 
-        {/* TIMELINE HISTORY LOG LOG */}
+        {/* WORKSPACE HISTORY LOG LOG */}
         <div style={cardStyle}>
           <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>📋 Logged Stay Segments</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            {processedTrips.map((trip) => (
-              <div key={trip.idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0f172a', border: '1px solid #334155', padding: '14px', borderRadius: '12px' }}>
-                <div>
-                  <div style={{ fontWeight: 'bold', color: '#f8fafc', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: trip.color, display: 'inline-block' }} />
-                    {trip.country}
-                    {trip.ongoing && <span style={{ background: '#1e3a8a', color: '#60a5fa', border: '1px solid #3b82f6', fontSize: '9px', fontWeight: '700', padding: '2px 6px', borderRadius: '20px', textTransform: 'uppercase' }}>Active</span>}
+            {processedTrips.length === 0 ? (
+              <div style={{ textAlign: 'center', color: '#475569', fontSize: '13px', padding: '20px 0' }}>No travel segments currently logged in this browser session.</div>
+            ) : (
+              processedTrips.map((trip) => (
+                <div key={trip.idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0f172a', border: '1px solid #334155', padding: '14px', borderRadius: '12px' }}>
+                  <div>
+                    <div style={{ fontWeight: 'bold', color: '#f8fafc', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: trip.color, display: 'inline-block' }} />
+                      {trip.country}
+                      {trip.ongoing && <span style={{ background: '#1e3a8a', color: '#60a5fa', border: '1px solid #3b82f6', fontSize: '9px', fontWeight: '700', padding: '2px 6px', borderRadius: '20px', textTransform: 'uppercase' }}>Active</span>}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
+                      {formatDisplayDate(trip.entry)} — {trip.ongoing ? 'Ongoing Stay' : formatDisplayDate(trip.exit)}
+                    </div>
                   </div>
-                  <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
-                    {formatDisplayDate(trip.entry)} — {trip.ongoing ? 'Ongoing Stay' : formatDisplayDate(trip.exit)}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <span style={{ background: '#334155', padding: '4px 8px', borderRadius: '6px', fontSize: '13px', fontWeight: '700', color: '#f1f5f9' }}>{trip.duration} Days</span>
+                    <button type="button" onClick={() => setTrips(trips.filter((_, i) => i !== trip.idx))} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '16px' }}>🗑️</button>
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <span style={{ background: '#334155', padding: '4px 8px', borderRadius: '6px', fontSize: '13px', fontWeight: '700', color: '#f1f5f9' }}>{trip.duration} Days</span>
-                  <button type="button" onClick={() => setTrips(trips.filter((_, i) => i !== trip.idx))} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '16px' }}>🗑️</button>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
