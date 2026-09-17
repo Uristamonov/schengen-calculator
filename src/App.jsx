@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
 export default function App() {
-  // Anchored timeline bounds matching the exact September 17, 2026 framework
-  const baseSliderDate = new Date(2026, 2, 21); // March 21, 2026 (Slider value 0)
+  const baseSliderDate = new Date(2026, 2, 21); // March 21, 2026
 
   const initialDataSet = [
     { country: "Italy", entry: "2021-09-29", exit: "2021-10-07", ongoing: false },
@@ -23,7 +22,7 @@ export default function App() {
   });
 
   const [evalDate, setEvalDate] = useState("2026-09-17");
-  const [sliderValue, setSliderValue] = useState(180); // Corresponds directly to 17/09/2026
+  const [sliderValue, setSliderValue] = useState(180); 
   
   const [country, setCountry] = useState("");
   const [entryDate, setEntryDate] = useState("");
@@ -56,7 +55,6 @@ export default function App() {
     return `${y}-${m}-${d}`;
   };
 
-  // Sync date picker input updates with slider step positioning
   const handleDatePickerChange = (isoVal) => {
     setEvalDate(isoVal);
     const target = parseLocalDate(isoVal);
@@ -65,7 +63,6 @@ export default function App() {
     setSliderValue(diffDays);
   };
 
-  // Sync horizontal range timeline changes with active calendar states
   const handleSliderChange = (val) => {
     const numericVal = parseInt(val, 10);
     setSliderValue(numericVal);
@@ -96,7 +93,6 @@ export default function App() {
     setTrips(trips.filter((_, i) => i !== idx));
   };
 
-  // 180-day window lookback calculation core engine
   const targetEvalDate = parseLocalDate(evalDate);
   const windowStart = new Date(targetEvalDate);
   windowStart.setDate(windowStart.getDate() - 179);
@@ -132,13 +128,11 @@ export default function App() {
       
       {/* GRAPHICAL CONTROLS & MONITOR COCKPIT */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-md p-6">
-        <div className="flex justify-between items-start mb-1">
-          <div>
-            <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-              🇪🇺 Schengen Stay Calculator
-            </h1>
-            <p className="text-slate-400 text-xs">Interactive 90/180-day rolling tracking system</p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
+            🇪🇺 Schengen Stay Calculator
+          </h1>
+          <p className="text-slate-400 text-xs">Interactive 90/180-day rolling tracking system</p>
         </div>
 
         {/* TIME CONTROLS PANEL */}
@@ -181,7 +175,7 @@ export default function App() {
             ) : totalDaysUsed === 90 ? (
               <div className="w-full bg-amber-50 border border-amber-200 text-amber-800 p-4 rounded-xl flex flex-col justify-center">
                 <div className="font-bold text-sm flex items-center gap-1.5">⚠️ Maximum Stay Limit</div>
-                <div className="text-xs mt-1 leading-relaxed">You have hit exactly <span className="font-bold">90 days</span>. Any additional stay tomorrow will trigger a customs border compliance alert.</div>
+                <div className="text-xs mt-1 leading-relaxed">You have hit exactly <span className="font-bold">90 days</span>. Any additional stay tomorrow will trigger a compliance alert.</div>
               </div>
             ) : (
               <div className="w-full bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl flex flex-col justify-center">
@@ -195,11 +189,11 @@ export default function App() {
 
       {/* INPUT INTERFACE SECTION */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-md p-6">
-        <h2 class="text-sm font-bold text-slate-800 mb-4 tracking-tight">➕ Add New Segment Entry</h2>
+        <h2 className="text-sm font-bold text-slate-800 mb-4 tracking-tight">➕ Add New Segment Entry</h2>
         <form onSubmit={handleAddTrip} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold text-slate-500">Destination Country</label>
-            <input type="text" placeholder="e.g. Poland, Spain, Germany" value={country} onChange={(e) => setCountry(e.target.value)} className="border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500" />
+            <input type="text" placeholder="e.g. Poland" value={country} onChange={(e) => setCountry(e.target.value)} className="border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1">
@@ -208,3 +202,7 @@ export default function App() {
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-semibold text-slate-500">Departure Date (Exit)</label>
+              <input type="date" value={exitDate} onChange={(e) => setExitDate(e.target.value)} disabled={isOngoing} className="border border-slate-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 disabled:bg-slate-50 disabled:text-slate-400" />
+            </div>
+          </div>
+          <label className="flex items-center gap-2 text-xs font-semibold text-slate-500 cursor-pointer mt-1">
