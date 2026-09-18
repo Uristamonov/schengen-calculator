@@ -44,7 +44,6 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('schengen_graphical_timeline_v4', JSON.stringify(trips));
   }, [trips]);
-
   const handleExportData = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(trips, null, 2));
     const downloadAnchor = document.createElement('a');
@@ -56,9 +55,11 @@ export default function App() {
   };
 
   const handleImportData = (e) => {
-    const fileReader = new FileReader();
     if (!e.target.files || e.target.files.length === 0) return;
-    fileReader.readAsText(e.target.files, "UTF-8");
+    const targetedInputBlob = e.target.files[0];
+    
+    const fileReader = new FileReader();
+    fileReader.readAsText(targetedInputBlob, "UTF-8");
     fileReader.onload = (event) => {
       try {
         const parsedData = JSON.parse(event.target.result);
@@ -71,6 +72,7 @@ export default function App() {
       } catch (err) {
         alert("Error parsing file structure.");
       }
+      e.target.value = "";
     };
   };
 
@@ -104,7 +106,6 @@ export default function App() {
       if (e.key >= '0' && e.key <= '9') e.preventDefault();
     }
   };
-
   const handleAddTrip = (e) => {
     e.preventDefault();
     if (!entryDate || (!exitDate && !isOngoing)) return alert("Please fill in dates.");
@@ -202,7 +203,6 @@ export default function App() {
     }
   }
 
-  // FIXED FORMATTING LAYER: Stores violation date in strict YYYY-MM-DD configuration string format
   let safeNextMonth = true;
   let highestFutureViolationDay = null; 
   let futureCheckDate = new Date(targetEvalDate);
@@ -220,10 +220,8 @@ export default function App() {
     });
     if (simDays > 90) { 
       safeNextMonth = false; 
-      const y = futureCheckDate.getFullYear();
-      const m = String(futureCheckDate.getMonth() + 1).padStart(2, '0');
-      const day = String(futureCheckDate.getDate()).padStart(2, '0');
-      highestFutureViolationDay = `${y}-${m}-${day}`; // Pure ISO String payload data
+      const y = futureCheckDate.getFullYear(), m = String(futureCheckDate.getMonth() + 1).padStart(2, '0'), day = String(futureCheckDate.getDate()).padStart(2, '0');
+      highestFutureViolationDay = `${y}-${m}-${day}`;
       break; 
     }
   }
@@ -267,7 +265,6 @@ export default function App() {
       <style>{inlineCalendarStyles}</style>
       <div style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '20px', boxSizing: 'border-box' }}>
         
-        {/* GRAPHICAL MONITOR PANEL */}
         <div style={cardStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '4px' }}>
             <div>
@@ -342,64 +339,6 @@ export default function App() {
             )}
           </div>
         </div>
-        {stressTestMode && (
-          <div style={{ ...cardStyle, background: stressTestViolationDate ? 'rgba(239,68,68,0.05)' : 'rgba(16,185,129,0.05)', borderColor: stressTestViolationDate ? '#ef4444' : '#10b981' }}>
-            <h2 style={{ fontSize: '11px', fontWeight: '800', color: stressTestViolationDate ? '#f87171' : '#34d399', textTransform: 'uppercase', marginBottom: '4px' }}>🛡️ Full Horizon Stress Test Result</h2>
-            <div style={{ fontSize: '13px', color: '#f8fafc', fontWeight: '600' }}>
-              {stressTestViolationDate ? (
-                <span>⚠️ <strong>Calendar Trap Detected!</strong> Your layout will trigger a violation on <span style={{ color: '#f87171', textDecoration: 'underline' }}>{formatDisplayDate(stressTestViolationDate)}</span>. Peak saturation hits <span style={{ color: '#ef4444' }}>{stressTestMaxDays} days</span> inside that 180-day frame.</span>
-              ) : (
-                <span>✅ <strong>Continuity Verified!</strong> Your entire 18-month itinerary layout clears all rolling lookback limits perfectly. Peak allocation hits {stressTestMaxDays}/90 days.</span>
-              )}
-            </div>
-          </div>
-        )}
-
-        {totalDaysUsed >= 90 && (
-          <div style={{ ...cardStyle, background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', border: '1px solid #3b82f6' }}>
-            <h2 style={{ fontSize: '11px', fontWeight: '800', color: '#3b82f6', textTransform: 'uppercase', marginBottom: '4px' }}>🔮 Predictive Entry Lookahead</h2>
-            <div style={{ fontSize: '14px', color: '#f8fafc', fontWeight: '600', lineHeight: '1.5' }}>
-              {nextRefreshDate ? (
-                <span>Assuming you leave the zone tomorrow, your earliest next entry allowance window opens on <span style={{ color: '#60a5fa', textDecoration: 'underline', fontWeight: '800' }}>{formatDisplayDate(nextRefreshDate.toISOString().split('T')[0])}</span>.</span>
-              ) : (
-                <span style={{ color: '#94a3b8' }}>An active ongoing stay means your counter increases at the same rate as the window moves. You must log a departure date to allow days to roll off.</span>
-              )}
-            </div>
-          </div>
-        )}
-
-        <div style={cardStyle}>
-          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>➕ Add New Travel Segment</h2>
-          <form onSubmit={handleAddTrip}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '14px', position: 'relative' }}>
-              <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Destination Country</label>
-              <input type="text" placeholder="Type to filter e.g. Poland, France..." value={country} onFocus={() => setShowSuggestions(true)} onBlur={() => setTimeout(() => setShowSuggestions(false), 200)} onChange={(e) => { setCountry(e.target.value); setShowSuggestions(true); }} style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} />
-              {showSuggestions && filteredSuggestions.length > 0 && (
-                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e293b', border: '1px solid #475569', borderRadius: '8px', marginTop: '4px', zIndex: 10, maxHeight: '150px', overflowY: 'auto', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)' }}>
-                  {filteredSuggestions.map((suggestion, sIdx) => (
-                    <div key={sIdx} onClick={() => { setCountry(suggestion); setShowSuggestions(false); }} style={{ padding: '10px 14px', fontSize: '13px', color: '#f8fafc', cursor: 'pointer', borderBottom: '1px solid #334155' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#2563eb'} onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}>📍 {suggestion}</div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div style={{ gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px', display: 'grid' }}>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Arrival Date (Entry)</label>
-                <input type="date" min="2026-01-01" max="2027-06-30" onKeyDown={handleDateKeyDown} value={entryDate} onChange={(e) => setEntryDate(e.target.value)} style={{...inputStyle, width:'100%', boxSizing:'border-box'}} />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Departure Date (Exit)</label>
-                <input type="date" min="2026-01-01" max="2027-06-30" onKeyDown={handleDateKeyDown} value={exitDate} onChange={(e) => setExitDate(e.target.value)} disabled={isOngoing} style={{...inputStyle, width:'100%', boxSizing:'border-box'}} />
-              </div>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '14px' }}>
-              <input type="checkbox" id="ongoingCheck" checked={isOngoing} onChange={(e) => { setIsOngoing(e.target.checked); if(e.target.checked) setExitDate(""); }} style={{ cursor: 'pointer' }} />
-              <label htmlFor="ongoingCheck" style={{ cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}>Still inside Schengen zone / Active stay</label>
-            </div>
-            <button type="submit" style={{ background: '#2563eb', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', width: '100%' }}>Append to Log Timeline</button>
-          </form>
-        </div>
         <div style={cardStyle}>
           <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>📋 Logged Stay Segments</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -462,11 +401,10 @@ export default function App() {
             )}
           </div>
         </div>
-
       </div>
 
       {showHelpModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px', boxSizing: 'border-box' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(8px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px', boxSizing: 'border-box' }}>
           <div style={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '24px', padding: '28px', maxWidth: '500px', width: '100%', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', boxSizing: 'border-box', color: '#cbd5e1', fontFamily: 'system-ui, sans-serif' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #334155', paddingBottom: '12px' }}>
               <h2 style={{ margin: 0, fontSize: '18px', color: '#f8fafc', fontWeight: '800' }}>💡 App Documentation Guide</h2>
