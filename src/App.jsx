@@ -34,6 +34,14 @@ export default function App() {
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [stressTestMode, setStressTestMode] = useState(false);
 
+  // TRIP EDITOR STATES
+  const [editingIdx, setEditingIdx] = useState(null);
+  const [editCountry, setEditCountry] = useState("");
+  const [editShowSuggestions, setEditShowSuggestions] = useState(false);
+  const [editEntryDate, setEditEntryDate] = useState("");
+  const [editExitDate, setEditExitDate] = useState("");
+  const [editIsOngoing, setEditIsOngoing] = useState(false);
+
   useEffect(() => {
     localStorage.setItem('schengen_graphical_timeline_v4', JSON.stringify(trips));
   }, [trips]);
@@ -47,7 +55,6 @@ export default function App() {
     downloadAnchor.click();
     downloadAnchor.remove();
   };
-
   const handleImportData = (e) => {
     const fileReader = new FileReader();
     if (!e.target.files || e.target.files.length === 0) return;
@@ -121,6 +128,39 @@ export default function App() {
     const dynamicColor = colors[trips.length % colors.length];
     setTriTrips([...trips, { country: verifiedCountryName, entry: entryDate, exit: isOngoing ? "" : exitDate, ongoing: isOngoing, color: dynamicColor }]);
     setCountry(""); setEntryDate(""); setExitDate(""); setIsOngoing(false);
+  };
+  const startEditing = (idx, trip) => {
+    setEditingIdx(idx);
+    setEditCountry(trip.country);
+    setEditEntryDate(trip.entry);
+    setEditExitDate(trip.ongoing ? "" : trip.exit);
+    setEditIsOngoing(trip.ongoing);
+  };
+
+  const handleSaveEdit = (idx) => {
+    if (!editEntryDate || (!editExitDate && !editIsOngoing)) return alert("Please fill in dates.");
+    const formattedInputCountry = editCountry.trim();
+    const isKnownState = schengenCountries.some(c => c.toLowerCase() === formattedInputCountry.toLowerCase());
+    if (!isKnownState) return alert("❌ Invalid Country Entry!");
+
+    const verifiedCountryName = schengenCountries.find(c => c.toLowerCase() === formattedInputCountry.toLowerCase());
+    const newStart = parseLocalDate(editEntryDate);
+    const newEnd = editIsOngoing ? new Date(2099, 11, 31) : parseLocalDate(editExitDate);
+    if (newEnd < newStart) return alert("Error: Departure date cannot be earlier than arrival.");
+
+    // Exclude the current trip row from its own verification collision loop checking
+    for (let i = 0; i < trips.length; i++) {
+      if (i === idx) continue;
+      const existingTrip = trips[i];
+      const existStart = parseLocalDate(existingTrip.entry);
+      const existEnd = existingTrip.ongoing ? new Date(2099, 11, 31) : parseLocalDate(existingTrip.exit);
+      if (newStart < existEnd && newEnd > existStart) return alert("❌ Scheduling Clash Detected inside edited profile!");
+    }
+
+    const updatedTrips = [...trips];
+    updatedTrips[idx] = { ...updatedTrips[idx], country: verifiedCountryName, entry: editEntryDate, exit: editIsOngoing ? "" : editExitDate, ongoing: editIsOngoing };
+    setTriTrips(updatedTrips);
+    setEditingIdx(null);
   };
   const targetEvalDate = parseLocalDate(evalDate);
   const windowStart = new Date(targetEvalDate);
@@ -200,7 +240,10 @@ export default function App() {
       testPointer.setDate(testPointer.getDate() + 1);
     }
   }
+
   const filteredSuggestions = schengenCountries.filter(c => c.toLowerCase().includes(country.toLowerCase()) && country.trim() !== "" && c.toLowerCase() !== country.toLowerCase());
+  const editFilteredSuggestions = schengenCountries.filter(c => c.toLowerCase().includes(editCountry.toLowerCase()) && editCountry.trim() !== "" && c.toLowerCase() !== editCountry.toLowerCase());
+
   const windowLeft = Math.max(0, Math.min(100, (windowStart - timelineStart) / (timelineEnd - timelineStart) * 100));
   const windowWidth = Math.max(0, Math.min(100, (targetEvalDate - windowStart) / (timelineEnd - timelineStart) * 100));
   const evalMarkerLeft = Math.max(0, Math.min(100, (targetEvalDate - timelineStart) / (timelineEnd - timelineStart) * 100));
@@ -208,7 +251,6 @@ export default function App() {
   const cardStyle = { backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '16px', padding: '24px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)', marginBottom: '20px', boxSizing: 'border-box' };
   const inputStyle = { background: '#0f172a', border: '1px solid #475569', color: '#f8fafc', padding: '8px 12px', borderRadius: '8px', fontSize: '14px', outline: 'none' };
   const inlineCalendarStyles = `input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; opacity: 0.8; } input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }`;
-
   return (
     <div style={{ backgroundColor: '#0f172a', minHeight: '100vh', padding: '20px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', alignItems: 'center', fontFamily: 'system-ui, sans-serif', width: '100%', boxSizing: 'border-box', position: 'relative' }}>
       <style>{inlineCalendarStyles}</style>
@@ -256,20 +298,19 @@ export default function App() {
           </div>
 
           <input type="range" min="0" max={totalTimelineDays} value={sliderValue} onChange={(e) => handleSliderChange(e.target.value)} style={{ width: '100%', height: '6px', background: '#334155', borderRadius: '4px', outline: 'none', cursor: 'pointer', marginBottom: '16px' }} />
-
-          <div style={{ display: 'flex', alignItems: 'center', justifycontent: 'space-between', padding: '12px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', marginBottom: '16px', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', padding: '12px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', marginBottom: '16px', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
               <span style={{ fontSize: '13px', fontWeight: '700', color: '#f8fafc' }}>🔍 Plan My Year: Full Continuity Stress Test</span>
               <span style={{ fontSize: '10px', color: '#64748b' }}>Scans ahead through all 18 months to check for future calendar traps</span>
             </div>
             <input type="checkbox" checked={stressTestMode} onChange={(e) => setStressTestMode(e.target.checked)} style={{ width: '18px', height: '18px', cursor: 'pointer' }} />
           </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: '130px 1fr', gap: '16px', marginTop: '16px' }}>
             <div style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase' }}>Days Used</h3>
               <p style={{ margin: '4px 0 0 0', fontSize: '36px', fontWeight: '900', color: '#f8fafc' }}>{totalDaysUsed}</p>
             </div>
-            
             {totalDaysUsed > 90 ? (
               <div style={{ padding: '16px', borderRadius: '12px', fontSize: '13px', background: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444', color: '#f87171', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>⚠️ Overstay Violation Triggered</div>
@@ -278,7 +319,7 @@ export default function App() {
             ) : !safeNextMonth ? (
               <div style={{ padding: '16px', borderRadius: '12px', fontSize: '13px', background: 'rgba(245,158,11,0.1)', border: '1px solid #f59e0b', color: '#fbbf24', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>⚠️ Future Overstay Warning</div>
-                <div>Current window is clear, but scheduled blocks cause a violation on <strong>{highestFutureViolationDay ? formatDisplayDate(highestFutureViolationDay.toISOString().split('T')[0]) : ''}</strong>!</div>
+                <div>Current window is clear, but scheduled blocks cause a violation on <strong>{highestFutureViolationDay ? formatDisplayDate(highestFutureViolationDay.toISOString().split('T')) : ''}</strong>!</div>
               </div>
             ) : (
               <div style={{ padding: '16px', borderRadius: '12px', fontSize: '13px', background: 'rgba(16,185,129,0.1)', border: '1px solid #10b981', color: '#34d399', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -294,7 +335,7 @@ export default function App() {
             <h2 style={{ fontSize: '11px', fontWeight: '800', color: stressTestViolationDate ? '#f87171' : '#34d399', textTransform: 'uppercase', marginBottom: '4px' }}>🛡️ Full Horizon Stress Test Result</h2>
             <div style={{ fontSize: '13px', color: '#f8fafc', fontWeight: '600' }}>
               {stressTestViolationDate ? (
-                <span>⚠️ <strong>Calendar Trap Detected!</strong> Your layout will trigger a violation on <span style={{ color: '#f87171', textDecoration: 'underline' }}>{formatDisplayDate(stressTestViolationDate.toISOString().split('T')[0])}</span>. Peak saturation hits <span style={{ color: '#ef4444' }}>{stressTestMaxDays} days</span> inside that 180-day frame.</span>
+                <span>⚠️ <strong>Calendar Trap Detected!</strong> Your layout will trigger a violation on <span style={{ color: '#f87171', textDecoration: 'underline' }}>{formatDisplayDate(stressTestViolationDate.toISOString().split('T'))}</span>. Peak saturation hits <span style={{ color: '#ef4444' }}>{stressTestMaxDays} days</span> inside that 180-day frame.</span>
               ) : (
                 <span>✅ <strong>Continuity Verified!</strong> Your entire 18-month itinerary layout clears all rolling lookback limits perfectly. Peak allocation hits {stressTestMaxDays}/90 days.</span>
               )}
@@ -307,7 +348,7 @@ export default function App() {
             <h2 style={{ fontSize: '11px', fontWeight: '800', color: '#3b82f6', textTransform: 'uppercase', marginBottom: '4px' }}>🔮 Predictive Entry Lookahead</h2>
             <div style={{ fontSize: '14px', color: '#f8fafc', fontWeight: '600', lineHeight: '1.5' }}>
               {nextRefreshDate ? (
-                <span>Assuming you leave the zone tomorrow, your earliest next entry allowance window opens on <span style={{ color: '#60a5fa', textDecoration: 'underline', fontWeight: '800' }}>{formatDisplayDate(nextRefreshDate.toISOString().split('T')[0])}</span>.</span>
+                <span>Assuming you leave the zone tomorrow, your earliest next entry allowance window opens on <span style={{ color: '#60a5fa', textDecoration: 'underline', fontWeight: '800' }}>{formatDisplayDate(nextRefreshDate.toISOString().split('T'))}</span>.</span>
               ) : (
                 <span style={{ color: '#94a3b8' }}>An active ongoing stay means your counter increases at the same rate as the window moves. You must log a departure date to allow days to roll off.</span>
               )}
@@ -354,19 +395,56 @@ export default function App() {
               <div style={{ textAlign: 'center', color: '#475569', fontSize: '13px', padding: '20px 0' }}>No travel segments currently logged in this browser session.</div>
             ) : (
               processedTrips.map((trip) => (
-                <div key={trip.idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0f172a', border: '1px solid #334155', padding: '14px', borderRadius: '12px' }}>
-                  <div>
-                    <div style={{ fontWeight: 'bold', color: '#f8fafc', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: trip.color, display: 'inline-block' }} />
-                      {trip.country}
-                      {trip.ongoing && <span style={{ background: '#1e3a8a', color: '#60a5fa', border: '1px solid #3b82f6', fontSize: '9px', fontWeight: '700', padding: '2px 6px', borderRadius: '20px', textTransform: 'uppercase' }}>Active</span>}
+                <div key={trip.idx} style={{ background: '#0f172a', border: '1px solid #334155', padding: '14px', borderRadius: '12px' }}>
+                  {editingIdx === trip.idx ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Edit Country</label>
+                        <input type="text" value={editCountry} onFocus={() => setEditShowSuggestions(true)} onBlur={() => setTimeout(() => setEditShowSuggestions(false), 200)} onChange={(e) => { setEditCountry(e.target.value); setEditShowSuggestions(true); }} style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} />
+                        {editShowSuggestions && editFilteredSuggestions.length > 0 && (
+                          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e293b', border: '1px solid #475569', borderRadius: '8px', marginTop: '4px', zIndex: 20, maxHeight: '120px', overflowY: 'auto' }}>
+                            {editFilteredSuggestions.map((sug, sIdx) => (
+                              <div key={sIdx} onClick={() => { setEditCountry(sug); setEditShowSuggestions(false); }} style={{ padding: '8px 12px', fontSize: '12px', color: '#f8fafc', cursor: 'pointer', borderBottom: '1px solid #334155' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#2563eb'} onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}>📍 {sug}</div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <label style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Entry</label>
+                          <input type="date" min="2026-01-01" max="2027-06-30" onKeyDown={handleDateKeyDown} value={editEntryDate} onChange={(e) => setEditEntryDate(e.target.value)} style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} />
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <label style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Exit</label>
+                          <input type="date" min="2026-01-01" max="2027-06-30" onKeyDown={handleDateKeyDown} value={editExitDate} onChange={(e) => setEditExitDate(e.target.value)} disabled={editIsOngoing} style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} />
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                        <input type="checkbox" id={`editOngoing-${trip.idx}`} checked={editIsOngoing} onChange={(e) => { setEditIsOngoing(e.target.checked); if (e.target.checked) setEditExitDate(""); }} />
+                        <label htmlFor={`editOngoing-${trip.idx}`} style={{ fontSize: '12px', fontWeight: '600' }}>Active Stay</label>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                        <button type="button" onClick={() => handleSaveEdit(trip.idx)} style={{ flex: 1, background: '#10b981', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}>💾 Save</button>
+                        <button type="button" onClick={() => setEditingIdx(null)} style={{ flex: 1, background: '#475569', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}>✕ Cancel</button>
+                      </div>
                     </div>
-                    <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>{formatDisplayDate(trip.entry)} — {trip.ongoing ? 'Ongoing Stay' : formatDisplayDate(trip.exit)}</div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ background: '#334155', padding: '4px 8px', borderRadius: '6px', fontSize: '13px', fontWeight: '700', color: '#f1f5f9' }}>{trip.duration} Days</span>
-                    <button type="button" onClick={() => setTriTrips(trips.filter((_, i) => i !== trip.idx))} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '16px' }}>🗑️</button>
-                  </div>
+                  ) : (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontWeight: 'bold', color: '#f8fafc', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: trip.color, display: 'inline-block' }} />
+                          {trip.country}
+                          {trip.ongoing && <span style={{ background: '#1e3a8a', color: '#60a5fa', border: '1px solid #3b82f6', fontSize: '9px', fontWeight: '700', padding: '2px 6px', borderRadius: '20px', textTransform: 'uppercase' }}>Active</span>}
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>{formatDisplayDate(trip.entry)} — {trip.ongoing ? 'Ongoing Stay' : formatDisplayDate(trip.exit)}</div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ background: '#334155', padding: '4px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', color: '#f1f5f9' }}>{trip.duration} Days</span>
+                        <button type="button" onClick={() => startEditing(trip.idx, trip)} style={{ background: 'none', border: 'none', color: '#38bdf8', cursor: 'pointer', fontSize: '14px' }} title="Edit Stay">✏️</button>
+                        <button type="button" onClick={() => setTriTrips(trips.filter((_, i) => i !== trip.idx))} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '14px' }} title="Delete Stay">🗑️</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))
             )}
@@ -384,20 +462,20 @@ export default function App() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px', lineHeight: '1.6', maxHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>
               <div>
-                <strong style={{ color: '#3b82f6', display: 'block', marginBottom: '2px' }}>🔍 Evaluation Date & Slider Mapping</strong>
-                The calendar box and range slider match up to target a specific reference day. Adjusting them highlights the active 180-day block area using an enclosed background overlay, instantly calculating how many stay segments fall within that zone range.
+                <strong style={{ color: '#3b82f6', display: 'block', marginBottom: '2px' }}>🔍 Navigating with Evaluation Date & Slider</strong>
+                The calendar box and range slider target a reference day. Adjusting them updates the red focal pinpoint indicator on your 18-month map grid and establishes the target point for the rolling lookback count.
               </div>
               <div>
                 <strong style={{ color: '#34d399', display: 'block', marginBottom: '2px' }}>🛡️ The 30-Day Safety Predictor</strong>
-                The panel continuously scans 30 days into the future from your slider focal date. If your logged upcoming trips create an allowance breach inside the rolling window within the next month, it flips to an immediate yellow cautionary warning.
+                The panel continuously scans 30 days into the future from your slider focal date. If logged upcoming trips create an allowance breach inside the rolling window within the next month, it flips to an immediate cautionary warning.
               </div>
               <div>
                 <strong style={{ color: '#a855f7', display: 'block', marginBottom: '2px' }}>🎛️ Plan My Year: Full Stress Test</strong>
                 Activating this toggle loops across your entire 18-month itinerary canvas to search for hidden "calendar traps." It catches instances where maximizing stays now accidentally borrows from your allowance later, making it perfect for verifying seasonal property timelines.
               </div>
               <div>
-                <strong style={{ color: '#cbd5e1', display: 'block', marginBottom: '2px' }}>🔒 Privacy & File Backups</strong>
-                Your travel histories are stored locally on your own device's internal sandbox. Use the <strong>Export</strong> action to download your timeline profile to your computer, and use <strong>Import</strong> to reload it anytime.
+                <strong style={{ color: '#38bdf8', display: 'block', marginBottom: '2px' }}>✏️ Inline Stay Modification</strong>
+                Click the pencil icon (✏️) on any item in your trip archive logs to toggle edit mode. Modify the country or dates directly in place and click Save (💾) to run strict collision checkers and instantly refresh your timeline graphics.
               </div>
             </div>
             <button type="button" onClick={() => setShowHelpModal(false)} style={{ width: '100%', background: '#2563eb', color: 'white', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: '700', marginTop: '20px', cursor: 'pointer' }}>Understood, Close Guide</button>
