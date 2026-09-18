@@ -83,7 +83,7 @@ export default function LogHistory({
                 </div>
               )}
             </div>
-          ))}
+          )))
       </div>
     </div>
   );
