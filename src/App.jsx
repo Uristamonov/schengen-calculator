@@ -100,8 +100,9 @@ export default function App() {
   };
 
   const handleDateKeyDown = (e) => {
-    if (e.target.value && e.target.value.length >= 10 && e.key >= '0' && e.key <= '9') {
-      e.preventDefault();
+    const value = e.target.value;
+    if (value && value.length >= 10) {
+      if (e.key >= '0' && e.key <= '9') e.preventDefault();
     }
   };
   const handleAddTrip = (e) => {
@@ -223,25 +224,12 @@ export default function App() {
       break; 
     }
   }
+
   let stressTestViolationDate = null;
   let stressTestMaxDays = 0;
-  if (stressTestMode && trips.length > 0) {
-    let milestoneDates = [];
-    trips.forEach(t => {
-      milestoneDates.push(parseLocalDate(t.entry));
-      if (!t.ongoing && t.exit) milestoneDates.push(parseLocalDate(t.exit));
-    });
-    milestoneDates.push(new Date(timelineStart));
-    milestoneDates.push(new Date(timelineEnd));
-    
-    milestoneDates.sort((a, b) => a - b);
-    let uniqueMilestones = [];
-    milestoneDates.forEach(d => {
-      if (!uniqueMilestones.some(u => u.getTime() === d.getTime())) uniqueMilestones.push(d);
-    });
-
-    for (let m = 0; m < uniqueMilestones.length; m++) {
-      let testPointer = new Date(uniqueMilestones[m]);
+  if (stressTestMode) {
+    let testPointer = new Date(timelineStart);
+    while (testPointer <= timelineEnd) {
       let simStart = new Date(testPointer);
       simStart.setDate(simStart.getDate() - 179);
       let simDays = 0;
@@ -253,10 +241,11 @@ export default function App() {
         if (interStart <= interEnd) simDays += Math.round((interEnd - interStart) / 86400000) + 1;
       });
       if (simDays > 90 && !stressTestViolationDate) { 
-        const y = testPointer.getFullYear(), month = String(testPointer.getMonth() + 1).padStart(2, '0'), day = String(testPointer.getDate()).padStart(2, '0');
-        stressTestViolationDate = `${y}-${month}-${day}`;
+        const y = testPointer.getFullYear(), m = String(testPointer.getMonth() + 1).padStart(2, '0'), d = String(testPointer.getDate()).padStart(2, '0');
+        stressTestViolationDate = `${y}-${m}-${d}`;
       }
       if (simDays > stressTestMaxDays) { stressTestMaxDays = simDays; }
+      testPointer.setDate(testPointer.getDate() + 1);
     }
   }
 
@@ -298,7 +287,7 @@ export default function App() {
             <span>➡️ Evaluation Target: <strong>{formatDisplayDate(evalDate)}</strong></span>
           </div>
 
-          <div style={{ position: 'relative', height: '160px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', margin: '16px 0', overflow: 'hidden', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.5)' }}>
+          <div style={{ position: 'relative', height: '160px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', margin: '24px 0 16px 0', overflow: 'hidden', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.5)' }}>
             <div style={{ position: 'absolute', left: '0%', width: '16.66%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'26 Q1</div>
             <div style={{ position: 'absolute', left: '16.66%', width: '16.66%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'26 Q2</div>
             <div style={{ position: 'absolute', left: '33.33%', width: '16.66%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'26 Q3</div>
@@ -325,7 +314,6 @@ export default function App() {
             </div>
             <input type="checkbox" checked={stressTestMode} onChange={(e) => setStressTestMode(e.target.checked)} style={{ width: '18px', height: '18px', cursor: 'pointer' }} />
           </div>
-
           <div style={{ display: 'grid', gridTemplateColumns: '130px 1fr', gap: '16px', marginTop: '16px' }}>
             <div style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
               <h3 style={{ margin: 0, fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase' }}>Days Used</h3>
@@ -349,6 +337,7 @@ export default function App() {
             )}
           </div>
         </div>
+
         {stressTestMode && (
           <div style={{ ...cardStyle, background: stressTestViolationDate ? 'rgba(239,68,68,0.05)' : 'rgba(16,185,129,0.05)', borderColor: stressTestViolationDate ? '#ef4444' : '#10b981' }}>
             <h2 style={{ fontSize: '11px', fontWeight: '800', color: stressTestViolationDate ? '#f87171' : '#34d399', textTransform: 'uppercase', marginBottom: '4px' }}>🛡️ Full Horizon Stress Test Result</h2>
@@ -407,8 +396,70 @@ export default function App() {
             <button type="submit" style={{ background: '#2563eb', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', width: '100%' }}>Append to Log Timeline</button>
           </form>
         </div>
+        <div style={cardStyle}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>📋 Logged Stay Segments</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {processedTrips.length === 0 ? (
+              <div style={{ textAlign: 'center', color: '#475569', fontSize: '13px', padding: '20px 0' }}>No travel segments currently logged in this browser session.</div>
+            ) : (
+              processedTrips.map((trip) => (
+                <div key={trip.idx} style={{ background: '#0f172a', border: '1px solid #334155', padding: '14px', borderRadius: '12px' }}>
+                  {editingIdx === trip.idx ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Edit Country</label>
+                        <input type="text" value={editCountry} onFocus={() => setEditShowSuggestions(true)} onBlur={() => setTimeout(() => setEditShowSuggestions(false), 200)} onChange={(e) => { setEditCountry(e.target.value); setEditShowSuggestions(true); }} style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} />
+                        {editShowSuggestions && editFilteredSuggestions.length > 0 && (
+                          <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e293b', border: '1px solid #475569', borderRadius: '8px', marginTop: '4px', zIndex: 20, maxHeight: '120px', overflowY: 'auto' }}>
+                            {editFilteredSuggestions.map((sug, sIdx) => (
+                              <div key={sIdx} onClick={() => { setEditCountry(sug); setEditShowSuggestions(false); }} style={{ padding: '8px 12px', fontSize: '12px', color: '#f8fafc', cursor: 'pointer', borderBottom: '1px solid #334155' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#2563eb'} onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}>📍 {sug}</div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <label style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Entry</label>
+                          <input type="date" min="2026-01-01" max="2027-06-30" onKeyDown={handleDateKeyDown} value={editEntryDate} onChange={(e) => setEditEntryDate(e.target.value)} style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} />
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                          <label style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Exit</label>
+                          <input type="date" min="2026-01-01" max="2027-06-30" onKeyDown={handleDateKeyDown} value={editExitDate} onChange={(e) => setEditExitDate(e.target.value)} disabled={editIsOngoing} style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} />
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                        <input type="checkbox" id={`editOngoing-${trip.idx}`} checked={editIsOngoing} onChange={(e) => { setEditIsOngoing(e.target.checked); if (e.target.checked) setEditExitDate(""); }} />
+                        <label htmlFor={`editOngoing-${trip.idx}`} style={{ fontSize: '12px', fontWeight: '600' }}>Active Stay</label>
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
+                        <button type="button" onClick={() => handleSaveEdit(trip.idx)} style={{ flex: 1, background: '#10b981', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}>💾 Save</button>
+                        <button type="button" onClick={() => setEditingIdx(null)} style={{ flex: 1, background: '#475569', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}>✕ Cancel</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontWeight: 'bold', color: '#f8fafc', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: trip.color, display: 'inline-block' }} />
+                          {trip.country}
+                          {trip.ongoing && <span style={{ background: '#1e3a8a', color: '#60a5fa', border: '1px solid #3b82f6', fontSize: '9px', fontWeight: '700', padding: '2px 6px', borderRadius: '20px', textTransform: 'uppercase' }}>Active</span>}
+                        </div>
+                        <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>{formatDisplayDate(trip.entry)} — {trip.ongoing ? 'Ongoing Stay' : formatDisplayDate(trip.exit)}</div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ background: '#334155', padding: '4px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', color: '#f1f5f9' }}>{trip.duration} Days</span>
+                        <button type="button" onClick={() => startEditing(trip.idx, trip)} style={{ background: 'none', border: 'none', color: '#38bdf8', cursor: 'pointer', fontSize: '14px' }} title="Edit Stay">✏️</button>
+                        <button type="button" onClick={() => setTriTrips(trips.filter((_, i) => i !== trip.idx))} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '14px' }} title="Delete Stay">🗑️</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       {showHelpModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px', boxSizing: 'border-box' }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(8px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px', boxSizing: 'border-box' }}>
           <div style={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '24px', padding: '28px', maxWidth: '500px', width: '100%', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', boxSizing: 'border-box', color: '#cbd5e1', fontFamily: 'system-ui, sans-serif' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #334155', paddingBottom: '12px' }}>
               <h2 style={{ margin: 0, fontSize: '18px', color: '#f8fafc', fontWeight: '800' }}>💡 App Documentation Guide</h2>
@@ -417,19 +468,19 @@ export default function App() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px', lineHeight: '1.6', maxHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>
               <div>
                 <strong style={{ color: '#3b82f6', display: 'block', marginBottom: '2px' }}>🔍 Navigating with Evaluation Date & Slider</strong>
-                The calendar box and range slider work hand-in-hand to shift your reference timeline point. Changing either tool updates the <strong>red focal pinpoint indicator</strong> on your 18-month map grid and establishes the target point for the rolling lookback count [Vercel].
+                The calendar box and range slider target a specific reference day. Adjusting them updates the red focal pinpoint indicator on your 18-month map grid and establishes the target point for the rolling lookback count.
               </div>
               <div>
-                <strong style={{ color: '#34d399', display: 'block', marginBottom: '2px' }}>📊 The 90/180-Day Rolling Rule</strong>
-                The panel dynamically assesses how many total days you have logged inside your active 180-day window relative to your current slider view point. This allows you to slide back into the past to track history or slide out into 2027 to forecast future trip balances [Vercel].
+                <strong style={{ color: '#34d399', display: 'block', marginBottom: '2px' }}>🛡️ The 30-Day Safety Predictor</strong>
+                The panel continuously scans 30 days into the future from your slider focal date. If logged upcoming trips create an allowance breach inside the rolling window within the next month, it flips to an immediate cautionary warning.
               </div>
               <div>
                 <strong style={{ color: '#a855f7', display: 'block', marginBottom: '2px' }}>🎛️ Plan My Year: Full Stress Test</strong>
-                Activating this toggle loops across your entire 18-month itinerary canvas to search for hidden "calendar traps." It catches instances where maximizing stays now accidentally borrows from your allowance later, making it perfect for verifying seasonal property timelines [Vercel].
+                Activating this toggle loops across your entire 18-month itinerary canvas to search for hidden "calendar traps." It catches instances where maximizing stays now accidentally borrows from your allowance later, making it perfect for verifying seasonal property timelines.
               </div>
               <div>
                 <strong style={{ color: '#38bdf8', display: 'block', marginBottom: '2px' }}>✏️ Inline Stay Modification</strong>
-                Click the pencil icon (✏️) on any item in your trip archive logs to toggle edit mode. Modify the country or dates directly in place and click Save (💾) to run strict collision checkers and instantly refresh your timeline graphics [Vercel].
+                Click the pencil icon (✏️) on any item in your trip archive logs to toggle edit mode. Modify the country or dates directly in place and click Save (💾) to run strict collision checkers and instantly refresh your timeline graphics.
               </div>
             </div>
             <button type="button" onClick={() => setShowHelpModal(false)} style={{ width: '100%', background: '#2563eb', color: 'white', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: '700', marginTop: '20px', cursor: 'pointer' }}>Understood, Close Guide</button>
