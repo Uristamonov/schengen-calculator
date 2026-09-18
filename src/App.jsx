@@ -34,7 +34,6 @@ export default function App() {
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [stressTestMode, setStressTestMode] = useState(false);
 
-  // TRIP EDITOR STATES
   const [editingIdx, setEditingIdx] = useState(null);
   const [editCountry, setEditCountry] = useState("");
   const [editShowSuggestions, setEditShowSuggestions] = useState(false);
@@ -55,6 +54,7 @@ export default function App() {
     downloadAnchor.click();
     downloadAnchor.remove();
   };
+
   const handleImportData = (e) => {
     const fileReader = new FileReader();
     if (!e.target.files || e.target.files.length === 0) return;
@@ -129,6 +129,7 @@ export default function App() {
     setTriTrips([...trips, { country: verifiedCountryName, entry: entryDate, exit: isOngoing ? "" : exitDate, ongoing: isOngoing, color: dynamicColor }]);
     setCountry(""); setEntryDate(""); setExitDate(""); setIsOngoing(false);
   };
+
   const startEditing = (idx, trip) => {
     setEditingIdx(idx);
     setEditCountry(trip.country);
@@ -148,13 +149,12 @@ export default function App() {
     const newEnd = editIsOngoing ? new Date(2099, 11, 31) : parseLocalDate(editExitDate);
     if (newEnd < newStart) return alert("Error: Departure date cannot be earlier than arrival.");
 
-    // Exclude the current trip row from its own verification collision loop checking
     for (let i = 0; i < trips.length; i++) {
       if (i === idx) continue;
       const existingTrip = trips[i];
       const existStart = parseLocalDate(existingTrip.entry);
       const existEnd = existingTrip.ongoing ? new Date(2099, 11, 31) : parseLocalDate(existingTrip.exit);
-      if (newStart < existEnd && newEnd > existStart) return alert("❌ Scheduling Clash Detected inside edited profile!");
+      if (newStart < existEnd && newEnd > existStart) return alert("❌ Scheduling Clash Detected!");
     }
 
     const updatedTrips = [...trips];
@@ -202,8 +202,9 @@ export default function App() {
     }
   }
 
+  // FIXED FORMATTING LAYER: Stores violation date in strict YYYY-MM-DD configuration string format
   let safeNextMonth = true;
-  let highestFutureViolationDay = null;
+  let highestFutureViolationDay = null; 
   let futureCheckDate = new Date(targetEvalDate);
   for (let d = 1; d <= 30; d++) {
     futureCheckDate.setDate(futureCheckDate.getDate() + 1);
@@ -215,9 +216,16 @@ export default function App() {
       let end = t.ongoing ? futureCheckDate : parseLocalDate(t.exit);
       if (end > futureCheckDate) end = futureCheckDate;
       const interStart = new Date(Math.max(start, simStart)), interEnd = new Date(Math.min(end, futureCheckDate));
-      if (interStart <= interEnd) simDays += Math.round((interEnd - simStart) / 86400000) + 1;
+      if (interStart <= interEnd) simDays += Math.round((interEnd - interStart) / 86400000) + 1;
     });
-    if (simDays > 90) { safeNextMonth = false; highestFutureViolationDay = new Date(futureCheckDate); break; }
+    if (simDays > 90) { 
+      safeNextMonth = false; 
+      const y = futureCheckDate.getFullYear();
+      const m = String(futureCheckDate.getMonth() + 1).padStart(2, '0');
+      const day = String(futureCheckDate.getDate()).padStart(2, '0');
+      highestFutureViolationDay = `${y}-${m}-${day}`; // Pure ISO String payload data
+      break; 
+    }
   }
 
   let stressTestViolationDate = null;
@@ -233,9 +241,12 @@ export default function App() {
         let end = t.ongoing ? (testPointer < targetEvalDate ? testPointer : targetEvalDate) : parseLocalDate(t.exit);
         if (end > testPointer) end = testPointer;
         const interStart = new Date(Math.max(start, simStart)), interEnd = new Date(Math.min(end, testPointer));
-        if (interStart <= interEnd) simDays += Math.round((interEnd - simStart) / 86400000) + 1;
+        if (interStart <= interEnd) simDays += Math.round((interEnd - interStart) / 86400000) + 1;
       });
-      if (simDays > 90 && !stressTestViolationDate) { stressTestViolationDate = new Date(testPointer); }
+      if (simDays > 90 && !stressTestViolationDate) { 
+        const y = testPointer.getFullYear(), m = String(testPointer.getMonth() + 1).padStart(2, '0'), d = String(testPointer.getDate()).padStart(2, '0');
+        stressTestViolationDate = `${y}-${m}-${d}`;
+      }
       if (simDays > stressTestMaxDays) { stressTestMaxDays = simDays; }
       testPointer.setDate(testPointer.getDate() + 1);
     }
@@ -256,6 +267,7 @@ export default function App() {
       <style>{inlineCalendarStyles}</style>
       <div style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '20px', boxSizing: 'border-box' }}>
         
+        {/* GRAPHICAL MONITOR PANEL */}
         <div style={cardStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '4px' }}>
             <div>
@@ -298,6 +310,7 @@ export default function App() {
           </div>
 
           <input type="range" min="0" max={totalTimelineDays} value={sliderValue} onChange={(e) => handleSliderChange(e.target.value)} style={{ width: '100%', height: '6px', background: '#334155', borderRadius: '4px', outline: 'none', cursor: 'pointer', marginBottom: '16px' }} />
+
           <div style={{ display: 'flex', alignItems: 'center', padding: '12px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', marginBottom: '16px', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
               <span style={{ fontSize: '13px', fontWeight: '700', color: '#f8fafc' }}>🔍 Plan My Year: Full Continuity Stress Test</span>
@@ -319,7 +332,7 @@ export default function App() {
             ) : !safeNextMonth ? (
               <div style={{ padding: '16px', borderRadius: '12px', fontSize: '13px', background: 'rgba(245,158,11,0.1)', border: '1px solid #f59e0b', color: '#fbbf24', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>⚠️ Future Overstay Warning</div>
-                <div>Current window is clear, but scheduled blocks cause a violation on <strong>{highestFutureViolationDay ? formatDisplayDate(highestFutureViolationDay.toISOString().split('T')) : ''}</strong>!</div>
+                <div>Current window is clear, but scheduled blocks cause a violation on <strong>{highestFutureViolationDay ? formatDisplayDate(highestFutureViolationDay) : ''}</strong>!</div>
               </div>
             ) : (
               <div style={{ padding: '16px', borderRadius: '12px', fontSize: '13px', background: 'rgba(16,185,129,0.1)', border: '1px solid #10b981', color: '#34d399', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
@@ -329,13 +342,12 @@ export default function App() {
             )}
           </div>
         </div>
-
         {stressTestMode && (
           <div style={{ ...cardStyle, background: stressTestViolationDate ? 'rgba(239,68,68,0.05)' : 'rgba(16,185,129,0.05)', borderColor: stressTestViolationDate ? '#ef4444' : '#10b981' }}>
             <h2 style={{ fontSize: '11px', fontWeight: '800', color: stressTestViolationDate ? '#f87171' : '#34d399', textTransform: 'uppercase', marginBottom: '4px' }}>🛡️ Full Horizon Stress Test Result</h2>
             <div style={{ fontSize: '13px', color: '#f8fafc', fontWeight: '600' }}>
               {stressTestViolationDate ? (
-                <span>⚠️ <strong>Calendar Trap Detected!</strong> Your layout will trigger a violation on <span style={{ color: '#f87171', textDecoration: 'underline' }}>{formatDisplayDate(stressTestViolationDate.toISOString().split('T'))}</span>. Peak saturation hits <span style={{ color: '#ef4444' }}>{stressTestMaxDays} days</span> inside that 180-day frame.</span>
+                <span>⚠️ <strong>Calendar Trap Detected!</strong> Your layout will trigger a violation on <span style={{ color: '#f87171', textDecoration: 'underline' }}>{formatDisplayDate(stressTestViolationDate)}</span>. Peak saturation hits <span style={{ color: '#ef4444' }}>{stressTestMaxDays} days</span> inside that 180-day frame.</span>
               ) : (
                 <span>✅ <strong>Continuity Verified!</strong> Your entire 18-month itinerary layout clears all rolling lookback limits perfectly. Peak allocation hits {stressTestMaxDays}/90 days.</span>
               )}
@@ -348,7 +360,7 @@ export default function App() {
             <h2 style={{ fontSize: '11px', fontWeight: '800', color: '#3b82f6', textTransform: 'uppercase', marginBottom: '4px' }}>🔮 Predictive Entry Lookahead</h2>
             <div style={{ fontSize: '14px', color: '#f8fafc', fontWeight: '600', lineHeight: '1.5' }}>
               {nextRefreshDate ? (
-                <span>Assuming you leave the zone tomorrow, your earliest next entry allowance window opens on <span style={{ color: '#60a5fa', textDecoration: 'underline', fontWeight: '800' }}>{formatDisplayDate(nextRefreshDate.toISOString().split('T'))}</span>.</span>
+                <span>Assuming you leave the zone tomorrow, your earliest next entry allowance window opens on <span style={{ color: '#60a5fa', textDecoration: 'underline', fontWeight: '800' }}>{formatDisplayDate(nextRefreshDate.toISOString().split('T')[0])}</span>.</span>
               ) : (
                 <span style={{ color: '#94a3b8' }}>An active ongoing stay means your counter increases at the same rate as the window moves. You must log a departure date to allow days to roll off.</span>
               )}
@@ -463,7 +475,7 @@ export default function App() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px', lineHeight: '1.6', maxHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>
               <div>
                 <strong style={{ color: '#3b82f6', display: 'block', marginBottom: '2px' }}>🔍 Navigating with Evaluation Date & Slider</strong>
-                The calendar box and range slider target a reference day. Adjusting them updates the red focal pinpoint indicator on your 18-month map grid and establishes the target point for the rolling lookback count.
+                The calendar box and range slider target a specific reference day. Adjusting them updates the red focal pinpoint indicator on your 18-month map grid and establishes the target point for the rolling lookback count.
               </div>
               <div>
                 <strong style={{ color: '#34d399', display: 'block', marginBottom: '2px' }}>🛡️ The 30-Day Safety Predictor</strong>
