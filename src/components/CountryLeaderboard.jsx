@@ -1,5 +1,6 @@
 import React from 'react';
 
+
 export default function CountryLeaderboard({ processedTrips, cardStyle }) {
   // Aggregate duration totals per country
   const statsMap = processedTrips.reduce((acc, trip) => {
