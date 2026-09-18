@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 
 export default function App() {
-  // Tightened 18-Month Chronological Horizon (6 Quarters total)
-  const timelineStart = new Date(2026, 0, 1);   // January 1, 2026
-  const timelineEnd = new Date(2027, 5, 30);    // June 30, 2027 (End of Q2 2027)
+  const timelineStart = new Date(2026, 0, 1);
+  const timelineEnd = new Date(2027, 5, 30);
   const totalTimelineDays = Math.round((timelineEnd - timelineStart) / 86400000);
 
   const initialDataSet = [];
@@ -32,6 +31,9 @@ export default function App() {
   const [entryDate, setEntryDate] = useState("");
   const [exitDate, setExitDate] = useState("");
   const [isOngoing, setIsOngoing] = useState(false);
+  
+  // Interactive modal visibility state tracker
+  const [showHelpModal, setShowHelpModal] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('schengen_graphical_timeline_v4', JSON.stringify(trips));
@@ -160,35 +162,6 @@ export default function App() {
     return { ...trip, duration: segmentDuration, left: pctStart, width: pctWidth, idx };
   });
 
-  // LOOKAHEAD FORECASTING ENGINE LOOP
-  let nextRefreshDate = null;
-  if (totalDaysUsed >= 90) {
-    let checkDate = new Date(targetEvalDate);
-    for (let dayOffset = 1; dayOffset <= 180; dayOffset++) {
-      checkDate.setDate(checkDate.getDate() + 1);
-      let simulatedStart = new Date(checkDate);
-      simulatedStart.setDate(simulatedStart.getDate() - 179);
-      
-      let simulatedDays = 0;
-      trips.forEach(t => {
-        const start = parseLocalDate(t.entry);
-        let end = t.ongoing ? targetEvalDate : parseLocalDate(t.exit);
-        if (end > checkDate) end = checkDate;
-        
-        const interStart = new Date(Math.max(start, simulatedStart));
-        const interEnd = new Date(Math.min(end, checkDate));
-        if (interStart <= interEnd) {
-          simulatedDays += Math.round((interEnd - interStart) / 86400000) + 1;
-        }
-      });
-      
-      if (simulatedDays < 90) {
-        nextRefreshDate = new Date(checkDate);
-        break;
-      }
-    }
-  }
-
   const filteredSuggestions = schengenCountries.filter(c => 
     c.toLowerCase().includes(country.toLowerCase()) && 
     country.trim() !== "" &&
@@ -214,7 +187,7 @@ export default function App() {
   `;
 
   return (
-    <div style={{ backgroundColor: '#0f172a', minHeight: '100vh', padding: '20px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', alignItems: 'center', fontFamily: 'system-ui, sans-serif', width: '100%', boxSizing: 'border-box' }}>
+    <div style={{ backgroundColor: '#0f172a', minHeight: '100vh', padding: '20px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', alignItems: 'center', fontFamily: 'system-ui, sans-serif', width: '100%', boxSizing: 'border-box', position: 'relative' }}>
       <style>{inlineCalendarStyles}</style>
       <div style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '20px', boxSizing: 'border-box' }}>
         
@@ -227,6 +200,8 @@ export default function App() {
             </div>
             
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              {/* DOCUMENTATION PANEL GUIDE TRIGGERS LINK */}
+              <button type="button" onClick={() => setShowHelpModal(true)} style={{ background: '#1e3a8a', border: '1px solid #3b82f6', color: '#60a5fa', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase' }} title="Open User Guide">💡 How to Use</button>
               <button type="button" onClick={handleExportData} style={{ background: '#334155', border: '1px solid #475569', color: '#f8fafc', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase' }} title="Download Backup File">📥 Export</button>
               <label style={{ background: '#334155', border: '1px solid #475569', color: '#f8fafc', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase' }} title="Upload Backup File">
                 📤 Import
@@ -240,16 +215,12 @@ export default function App() {
             <input type="date" min="2026-01-01" max="2027-06-30" onKeyDown={handleDateKeyDown} value={evalDate} onChange={(e) => handleDatePickerChange(e.target.value)} style={inputStyle} />
           </div>
 
-          {/* RE-INDEXED 6-QUARTER VISUAL GRAPHICAL TIMELINE CANVAS */}
+          {/* 4X TALLER VISUAL GRAPHICAL TIMELINE */}
           <div style={{ position: 'relative', height: '160px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', margin: '24px 0 16px 0', overflow: 'hidden', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.5)' }}>
-            
-            {/* 2026 Proportional Guideline Columns (16.66% width slices) */}
             <div style={{ position: 'absolute', left: '0%', width: '16.66%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'26 Q1</div>
             <div style={{ position: 'absolute', left: '16.66%', width: '16.66%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'26 Q2</div>
             <div style={{ position: 'absolute', left: '33.33%', width: '16.66%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'26 Q3</div>
             <div style={{ position: 'absolute', left: '50%', width: '16.66%', borderRight: '2px solid #334155', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#64748b', fontWeight: 'black' }}>'26 Q4</div>
-
-            {/* 2027 Proportional Guideline Columns */}
             <div style={{ position: 'absolute', left: '66.66%', width: '16.66%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'27 Q1</div>
             <div style={{ position: 'absolute', left: '83.33%', width: '16.66%', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'27 Q2</div>
 
@@ -356,7 +327,6 @@ export default function App() {
             <button type="submit" style={{ background: '#2563eb', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', width: '100%' }}>Append to Log Timeline</button>
           </form>
         </div>
-
         {/* WORKSPACE HISTORY LOG LOG */}
         <div style={cardStyle}>
           <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>📋 Logged Stay Segments</h2>
@@ -387,6 +357,37 @@ export default function App() {
         </div>
 
       </div>
+
+      {/* FULL SCREEN MODAL DIALOG USER OVERLAY GUIDE */}
+      {showHelpModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px', boxSizing: 'border-box' }}>
+          <div style={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '24px', padding: '28px', maxWidth: '500px', width: '100%', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', boxSizing: 'border-box', color: '#cbd5e1', fontFamily: 'system-ui, sans-serif' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #334155', paddingBottom: '12px' }}>
+              <h2 style={{ margin: 0, fontSize: '18px', color: '#f8fafc', fontWeight: '800' }}>💡 App Documentation Guide</h2>
+              <button type="button" onClick={() => setShowHelpModal(false)} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer', fontWeight: 'bold' }}>✕</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px', lineHeight: '1.6', maxHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>
+              <div>
+                <strong style={{ color: '#f8fafc', display: 'block', marginBottom: '2px' }}>📊 The 90/180-Day Rolling Rule</strong>
+                Short-stay visitors to the Schengen zone are allowed to spend a maximum of <strong>90 days within any rolling 180-day lookback window</strong>. This app calculates that dynamically based on your slider position.
+              </div>
+              <div>
+                <strong style={{ color: '#f8fafc', display: 'block', marginBottom: '2px' }}>📍 Logging Trips & Transit Days</strong>
+                Type a destination country name and select an official state from the suggestion dropdown. The overlap calculator handles transit days perfectly, meaning you can exit Country A and enter Country B on the same afternoon.
+              </div>
+              <div>
+                <strong style={{ color: '#f8fafc', display: 'block', marginBottom: '2px' }}>🏃 Active Stays Checkbox</strong>
+                Check the <em>"Still inside Schengen zone"</em> box if you are currently inside a country. This locks the departure variable to the rolling slider target dynamically.
+              </div>
+              <div>
+                <strong style={{ color: '#f8fafc', display: 'block', marginBottom: '2px' }}>🔒 Privacy & File Backups</strong>
+                Your travel histories are stored locally on your own device's internal sandbox. Use the <strong>Export</strong> action to download your timeline profile to your computer, and use <strong>Import</strong> to reload it anytime.
+              </div>
+            </div>
+            <button type="button" onClick={() => setShowHelpModal(false)} style={{ width: '100%', background: '#2563eb', color: 'white', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: '700', marginTop: '20px', cursor: 'pointer' }}>Understood, Close Guide</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
