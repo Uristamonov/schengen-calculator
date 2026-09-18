@@ -32,6 +32,9 @@ export default function App() {
   const [exitDate, setExitDate] = useState("");
   const [isOngoing, setIsOngoing] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
+  
+  // NEW UTILITY TOGGLE STATES
+  const [stressTestMode, setStressTestMode] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('schengen_graphical_timeline_v4', JSON.stringify(trips));
@@ -141,6 +144,7 @@ export default function App() {
     const pctEnd = Math.max(0, Math.min(100, (end - timelineStart) / (timelineEnd - timelineStart) * 100));
     return { ...trip, duration: segmentDuration, left: pctStart, width: Math.max(0.5, pctEnd - pctStart), idx };
   });
+  // 🔮 ENGINE 1: NEXT RESET LOOKAHEAD
   let nextRefreshDate = null;
   if (totalDaysUsed >= 90) {
     let checkDate = new Date(targetEvalDate);
@@ -160,6 +164,47 @@ export default function App() {
     }
   }
 
+  // 🛡️ ENGINE 2: 30-DAY SAFETY LOOKAHEAD PREDICTOR
+  let safeNextMonth = true;
+  let highestFutureViolationDay = null;
+  let futureCheckDate = new Date(targetEvalDate);
+  for (let d = 1; d <= 30; d++) {
+    futureCheckDate.setDate(futureCheckDate.getDate() + 1);
+    let simStart = new Date(futureCheckDate);
+    simStart.setDate(simStart.getDate() - 179);
+    let simDays = 0;
+    trips.forEach(t => {
+      const start = parseLocalDate(t.entry);
+      let end = t.ongoing ? futureCheckDate : parseLocalDate(t.exit);
+      if (end > futureCheckDate) end = futureCheckDate;
+      const interStart = new Date(Math.max(start, simStart)), interEnd = new Date(Math.min(end, futureCheckDate));
+      if (interStart <= interEnd) simDays += Math.round((interEnd - interStart) / 86400000) + 1;
+    });
+    if (simDays > 90) { safeNextMonth = false; highestFutureViolationDay = new Date(futureCheckDate); break; }
+  }
+
+  // 🎛️ ENGINE 3: FULL YEAR STRESS TEST PROTECTION MATRIX
+  let stressTestViolationDate = null;
+  let stressTestMaxDays = 0;
+  if (stressTestMode) {
+    let testPointer = new Date(timelineStart);
+    while (testPointer <= timelineEnd) {
+      let simStart = new Date(testPointer);
+      simStart.setDate(simStart.getDate() - 179);
+      let simDays = 0;
+      trips.forEach(t => {
+        const start = parseLocalDate(t.entry);
+        let end = t.ongoing ? (testPointer < targetEvalDate ? testPointer : targetEvalDate) : parseLocalDate(t.exit);
+        if (end > testPointer) end = testPointer;
+        const interStart = new Date(Math.max(start, simStart)), interEnd = new Date(Math.min(end, testPointer));
+        if (interStart <= interEnd) simDays += Math.round((interEnd - interStart) / 86400000) + 1;
+      });
+      if (simDays > 90 && !stressTestViolationDate) { stressTestViolationDate = new Date(testPointer); }
+      if (simDays > stressTestMaxDays) { stressTestMaxDays = simDays; }
+      testPointer.setDate(testPointer.getDate() + 1);
+    }
+  }
+
   const filteredSuggestions = schengenCountries.filter(c => c.toLowerCase().includes(country.toLowerCase()) && country.trim() !== "" && c.toLowerCase() !== country.toLowerCase());
   const windowLeft = Math.max(0, Math.min(100, (windowStart - timelineStart) / (timelineEnd - timelineStart) * 100));
   const windowWidth = Math.max(0, Math.min(100, (targetEvalDate - windowStart) / (timelineEnd - timelineStart) * 100));
@@ -167,14 +212,13 @@ export default function App() {
 
   const cardStyle = { backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '16px', padding: '24px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)', marginBottom: '20px', boxSizing: 'border-box' };
   const inputStyle = { background: '#0f172a', border: '1px solid #475569', color: '#f8fafc', padding: '8px 12px', borderRadius: '8px', fontSize: '14px', outline: 'none' };
-
   const inlineCalendarStyles = `input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; opacity: 0.8; } input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }`;
-
   return (
     <div style={{ backgroundColor: '#0f172a', minHeight: '100vh', padding: '20px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', alignItems: 'center', fontFamily: 'system-ui, sans-serif', width: '100%', boxSizing: 'border-box', position: 'relative' }}>
       <style>{inlineCalendarStyles}</style>
       <div style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '20px', boxSizing: 'border-box' }}>
         
+        {/* GRAPHICAL MONITOR PANEL */}
         <div style={cardStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '4px' }}>
             <div>
@@ -193,7 +237,13 @@ export default function App() {
             <input type="date" min="2026-01-01" max="2027-06-30" onKeyDown={handleDateKeyDown} value={evalDate} onChange={(e) => handleDatePickerChange(e.target.value)} style={inputStyle} />
           </div>
 
-          <div style={{ position: 'relative', height: '160px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', margin: '24px 0 16px 0', overflow: 'hidden', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.5)' }}>
+          {/* 🔍 LOOKBACK WINDOW HELPER COMPONENT CARD BLOCK */}
+          <div style={{ padding: '8px 12px', background: '#1e293b', borderRadius: '8px', border: '1px dashed #475569', fontSize: '11px', color: '#94a3b8', marginBottom: '14px', display: 'flex', justifyContent: 'space-between' }}>
+            <span>📅 Window Start: <strong>{formatDisplayDate(windowStart.toISOString().split('T')[0])}</strong></span>
+            <span>➡️ Evaluation Target: <strong>{formatDisplayDate(evalDate)}</strong></span>
+          </div>
+
+          <div style={{ position: 'relative', height: '160px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', margin: '16px 0', overflow: 'hidden', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.5)' }}>
             <div style={{ position: 'absolute', left: '0%', width: '16.66%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'26 Q1</div>
             <div style={{ position: 'absolute', left: '16.66%', width: '16.66%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'26 Q2</div>
             <div style={{ position: 'absolute', left: '33.33%', width: '16.66%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'26 Q3</div>
@@ -212,43 +262,15 @@ export default function App() {
           </div>
 
           <input type="range" min="0" max={totalTimelineDays} value={sliderValue} onChange={(e) => handleSliderChange(e.target.value)} style={{ width: '100%', height: '6px', background: '#334155', borderRadius: '4px', outline: 'none', cursor: 'pointer', marginBottom: '16px' }} />
-          <div style={{ display: 'grid', gridTemplateColumns: '130px 1fr', gap: '16px', marginTop: '16px' }}>
-            <div style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
-              <h3 style={{ margin: 0, fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase' }}>Days Used</h3>
-              <p style={{ margin: '4px 0 0 0', fontSize: '36px', fontWeight: '900', color: '#f8fafc' }}>{totalDaysUsed}</p>
-            </div>
-            {totalDaysUsed > 90 ? (
-              <div style={{ padding: '16px', borderRadius: '12px', fontSize: '13px', background: 'rgba(239,68,68,0.1)', border: '1px solid #ef4444', color: '#f87171', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>⚠️ Overstay Violation Triggered</div>
-                <div>Your timeline uses {totalDaysUsed} days, exceeding limits by {totalDaysUsed - 90} days!</div>
-              </div>
-            ) : totalDaysUsed === 90 ? (
-              <div style={{ padding: '16px', borderRadius: '12px', fontSize: '13px', background: 'rgba(245,158,11,0.1)', border: '1px solid #f59e0b', color: '#fbbf24', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>⚠️ Maximum Stay Threshold Met</div>
-                <div>Exactly 90 days used. Staying any longer will result in an immediate customs compliance alert.</div>
-              </div>
-            ) : (
-              <div style={{ padding: '16px', borderRadius: '12px', fontSize: '13px', background: 'rgba(16,185,129,0.1)', border: '1px solid #10b981', color: '#34d399', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>✅ Safe Window Alignment</div>
-                <div>You hold {90 - totalDaysUsed} safe remaining short-stay days available in this window.</div>
-              </div>
-            )}
-          </div>
-        </div>
 
-        {totalDaysUsed >= 90 && (
-          <div style={{ ...cardStyle, background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', border: '1px solid #3b82f6' }}>
-            <h2 style={{ fontSize: '11px', fontWeight: '800', color: '#3b82f6', textTransform: 'uppercase', marginBottom: '6px' }}>🔮 Predictive Entry Lookahead</h2>
-            <div style={{ fontSize: '14px', color: '#f8fafc', fontWeight: '600', lineHeight: '1.5' }}>
-              {nextRefreshDate ? (
-                <span>Assuming you leave the zone tomorrow, your earliest next entry allowance window opens on <span style={{ color: '#60a5fa', textDecoration: 'underline', fontWeight: '800' }}>{formatDisplayDate(nextRefreshDate.toISOString().split('T')[0])}</span>.</span>
-              ) : (
-                <span style={{ color: '#94a3b8' }}>An active ongoing stay means your counter increases at the same rate as the window moves. You must log a departure date to allow days to roll off.</span>
-              )}
+          {/* 🎛️ NEW FULL YEAR STRESS TEST TRIGGER LINK SWITCH BAR */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <span style={{ fontSize: '13px', fontWeight: '700', color: '#f8fafc' }}>🔍 Plan My Year: Full Continuity Stress Test</span>
+              <span style={{ fontSize: '10px', color: '#64748b' }}>Scans ahead through all 18 months to check for future calendar traps</span>
             </div>
+            <input type="checkbox" checked={stressTestMode} onChange={(e) => setStressTestMode(e.target.checked)} style={{ width: '18px', height: '18px', cursor: 'pointer' }} />
           </div>
-        )}
-
         <div style={cardStyle}>
           <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>➕ Add New Travel Segment</h2>
           <form onSubmit={handleAddTrip}>
@@ -318,20 +340,16 @@ export default function App() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px', lineHeight: '1.6', maxHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>
               <div>
-                <strong style={{ color: '#3b82f6', display: 'block', marginBottom: '2px' }}>🔍 Navigating with Evaluation Date & Slider</strong>
-                The <strong>Evaluation Date</strong> calendar selector and horizontal range slider work hand-in-hand to shift your reference timeline point. Changing either tool updates the <strong>red focal pinpoint indicator</strong> on your 18-month map grid and establishes the target point for the rolling lookback count [Vercel].
+                <strong style={{ color: '#3b82f6', display: 'block', marginBottom: '2px' }}>🔍 Evaluation Date & Slider Mapping</strong>
+                The calendar box and range slider match up to target a specific reference day. Adjusting them highlights the active 180-day block area using an enclosed background overlay, instantly calculating how many stay segments fall within that zone range [Vercel].
               </div>
               <div>
-                <strong style={{ color: '#34d399', display: 'block', marginBottom: '2px' }}>📊 The 90/180-Day Rolling Rule</strong>
-                The panel dynamically assesses how many total days you have logged inside your active 180-day window relative to your current slider view point. This allows you to slide back into the past to track history or slide out into 2027 to forecast future trip balances [Vercel].
+                <strong style={{ color: '#34d399', display: 'block', marginBottom: '2px' }}>🛡️ The 30-Day Safety Predictor</strong>
+                The panel continuously scans 30 days into the future from your slider focal date. If your logged upcoming trips create an allowance breach inside the rolling window within the next month, it flips to an immediate yellow cautionary warning [Vercel].
               </div>
               <div>
-                <strong style={{ color: '#cbd5e1', display: 'block', marginBottom: '2px' }}>📍 Logging Trips & Transit Days</strong>
-                Type a destination country name and select an official state from the suggestion dropdown. The overlap calculator handles transit days perfectly, meaning you can exit Country A and enter Country B on the same afternoon.
-              </div>
-              <div>
-                <strong style={{ color: '#cbd5e1', display: 'block', marginBottom: '2px' }}>🏃 Active Stays Checkbox</strong>
-                Check the <em>"Still inside Schengen zone"</em> box if you are currently inside a country. This locks the departure variable to the rolling slider target dynamically.
+                <strong style={{ color: '#a855f7', display: 'block', marginBottom: '2px' }}>🎛️ Plan My Year: Full Stress Test</strong>
+                Activating this toggle loops across your entire 18-month itinerary canvas to search for hidden "calendar traps." It catches instances where maximizing stays now accidentally borrows from your allowance later, making it perfect for verifying seasonal property timelines [Vercel].
               </div>
               <div>
                 <strong style={{ color: '#cbd5e1', display: 'block', marginBottom: '2px' }}>🔒 Privacy & File Backups</strong>
