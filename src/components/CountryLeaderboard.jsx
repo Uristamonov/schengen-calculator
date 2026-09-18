@@ -44,7 +44,7 @@ export default function CountryLeaderboard({ processedTrips, cardStyle }) {
               </div>
             </div>
           );
-        })}
+        }))
       </div>
     </div>
   );
