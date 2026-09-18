@@ -31,8 +31,6 @@ export default function App() {
   const [entryDate, setEntryDate] = useState("");
   const [exitDate, setExitDate] = useState("");
   const [isOngoing, setIsOngoing] = useState(false);
-  
-  // Interactive modal visibility state tracker
   const [showHelpModal, setShowHelpModal] = useState(false);
 
   useEffect(() => {
@@ -82,7 +80,6 @@ export default function App() {
     const diffDays = Math.round((parseLocalDate(isoVal) - timelineStart) / 86400000);
     setSliderValue(Math.max(0, Math.min(totalTimelineDays, diffDays)));
   };
-
   const handleSliderChange = (val) => {
     const numericVal = parseInt(val, 10);
     setSliderValue(numericVal);
@@ -95,42 +92,27 @@ export default function App() {
   const handleDateKeyDown = (e) => {
     const value = e.target.value;
     if (value && value.length >= 10) {
-      if (e.key >= '0' && e.key <= '9') {
-        e.preventDefault();
-      }
+      if (e.key >= '0' && e.key <= '9') e.preventDefault();
     }
   };
 
   const handleAddTrip = (e) => {
     e.preventDefault();
     if (!entryDate || (!exitDate && !isOngoing)) return alert("Please fill in dates.");
-
     const formattedInputCountry = country.trim();
     const isKnownState = schengenCountries.some(c => c.toLowerCase() === formattedInputCountry.toLowerCase());
-
-    if (!isKnownState) {
-      alert(`❌ Invalid Country Entry!\n\n"${formattedInputCountry}" is not recognized. You must choose an official Schengen or EU Member State from our dropdown list.`);
-      return;
-    }
+    if (!isKnownState) return alert("❌ Invalid Country Entry!");
 
     const verifiedCountryName = schengenCountries.find(c => c.toLowerCase() === formattedInputCountry.toLowerCase());
     const newStart = parseLocalDate(entryDate);
     const newEnd = isOngoing ? new Date(2099, 11, 31) : parseLocalDate(exitDate);
-
-    if (newEnd < newStart) {
-      alert("Error: Departure date cannot be earlier than the arrival date.");
-      return;
-    }
+    if (newEnd < newStart) return alert("Error: Departure date cannot be earlier than arrival.");
 
     for (let i = 0; i < trips.length; i++) {
       const existingTrip = trips[i];
       const existStart = parseLocalDate(existingTrip.entry);
       const existEnd = existingTrip.ongoing ? new Date(2099, 11, 31) : parseLocalDate(existingTrip.exit);
-
-      if (newStart < existEnd && newEnd > existStart) {
-        alert(`❌ Scheduling Clash Detected!\n\nYour entered window overlaps with an existing logged stay:\n📍 Country: ${existingTrip.country}\n📅 Dates: ${formatDisplayDate(existingTrip.entry)} — ${existingTrip.ongoing ? 'Ongoing' : formatDisplayDate(existingTrip.exit)}`);
-        return;
-      }
+      if (newStart < existEnd && newEnd > existStart) return alert("❌ Scheduling Clash Detected!");
     }
 
     const colors = ['#3b82f6', '#eab308', '#ec4899', '#14b8a6', '#10b981', '#a855f7'];
@@ -138,6 +120,7 @@ export default function App() {
     setTriTrips([...trips, { country: verifiedCountryName, entry: entryDate, exit: isOngoing ? "" : exitDate, ongoing: isOngoing, color: dynamicColor }]);
     setCountry(""); setEntryDate(""); setExitDate(""); setIsOngoing(false);
   };
+
   const targetEvalDate = parseLocalDate(evalDate);
   const windowStart = new Date(targetEvalDate);
   windowStart.setDate(windowStart.getDate() - 179);
@@ -154,20 +137,30 @@ export default function App() {
       const interStart = new Date(Math.max(start, windowStart)), interEnd = new Date(Math.min(effExit, targetEvalDate));
       if (interStart <= interEnd) totalDaysUsed += Math.round((interEnd - interStart) / 86400000) + 1;
     }
-
     const pctStart = Math.max(0, Math.min(100, (start - timelineStart) / (timelineEnd - timelineStart) * 100));
     const pctEnd = Math.max(0, Math.min(100, (end - timelineStart) / (timelineEnd - timelineStart) * 100));
-    const pctWidth = Math.max(0.5, pctEnd - pctStart);
-
-    return { ...trip, duration: segmentDuration, left: pctStart, width: pctWidth, idx };
+    return { ...trip, duration: segmentDuration, left: pctStart, width: Math.max(0.5, pctEnd - pctStart), idx };
   });
+  let nextRefreshDate = null;
+  if (totalDaysUsed >= 90) {
+    let checkDate = new Date(targetEvalDate);
+    for (let dayOffset = 1; dayOffset <= 180; dayOffset++) {
+      checkDate.setDate(checkDate.getDate() + 1);
+      let simulatedStart = new Date(checkDate);
+      simulatedStart.setDate(simulatedStart.getDate() - 179);
+      let simulatedDays = 0;
+      trips.forEach(t => {
+        const start = parseLocalDate(t.entry);
+        let end = t.ongoing ? targetEvalDate : parseLocalDate(t.exit);
+        if (end > checkDate) end = checkDate;
+        const interStart = new Date(Math.max(start, simulatedStart)), interEnd = new Date(Math.min(end, checkDate));
+        if (interStart <= interEnd) simulatedDays += Math.round((interEnd - interStart) / 86400000) + 1;
+      });
+      if (simulatedDays < 90) { nextRefreshDate = new Date(checkDate); break; }
+    }
+  }
 
-  const filteredSuggestions = schengenCountries.filter(c => 
-    c.toLowerCase().includes(country.toLowerCase()) && 
-    country.trim() !== "" &&
-    c.toLowerCase() !== country.toLowerCase()
-  );
-
+  const filteredSuggestions = schengenCountries.filter(c => c.toLowerCase().includes(country.toLowerCase()) && country.trim() !== "" && c.toLowerCase() !== country.toLowerCase());
   const windowLeft = Math.max(0, Math.min(100, (windowStart - timelineStart) / (timelineEnd - timelineStart) * 100));
   const windowWidth = Math.max(0, Math.min(100, (targetEvalDate - windowStart) / (timelineEnd - timelineStart) * 100));
   const evalMarkerLeft = Math.max(0, Math.min(100, (targetEvalDate - timelineStart) / (timelineEnd - timelineStart) * 100));
@@ -175,38 +168,23 @@ export default function App() {
   const cardStyle = { backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '16px', padding: '24px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)', marginBottom: '20px', boxSizing: 'border-box' };
   const inputStyle = { background: '#0f172a', border: '1px solid #475569', color: '#f8fafc', padding: '8px 12px', borderRadius: '8px', fontSize: '14px', outline: 'none' };
 
-  const inlineCalendarStyles = `
-    input[type="date"]::-webkit-calendar-picker-indicator {
-      filter: invert(1);
-      cursor: pointer;
-      opacity: 0.8;
-    }
-    input[type="date"]::-webkit-calendar-picker-indicator:hover {
-      opacity: 1;
-    }
-  `;
+  const inlineCalendarStyles = `input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; opacity: 0.8; } input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }`;
 
   return (
     <div style={{ backgroundColor: '#0f172a', minHeight: '100vh', padding: '20px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', alignItems: 'center', fontFamily: 'system-ui, sans-serif', width: '100%', boxSizing: 'border-box', position: 'relative' }}>
       <style>{inlineCalendarStyles}</style>
       <div style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '20px', boxSizing: 'border-box' }}>
         
-        {/* GRAPHICAL MONITOR PANEL */}
         <div style={cardStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '4px' }}>
             <div>
               <h1 style={{ fontSize: '24px', color: '#f8fafc', margin: 0, fontWeight: '800' }}>🇪🇺 Schengen Short-Stay Monitor</h1>
               <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0 }}>Interactive 18-Month Lookahead Timeline</p>
             </div>
-            
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              {/* DOCUMENTATION PANEL GUIDE TRIGGERS LINK */}
-              <button type="button" onClick={() => setShowHelpModal(true)} style={{ background: '#1e3a8a', border: '1px solid #3b82f6', color: '#60a5fa', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase' }} title="Open User Guide">💡 How to Use</button>
-              <button type="button" onClick={handleExportData} style={{ background: '#334155', border: '1px solid #475569', color: '#f8fafc', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase' }} title="Download Backup File">📥 Export</button>
-              <label style={{ background: '#334155', border: '1px solid #475569', color: '#f8fafc', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase' }} title="Upload Backup File">
-                📤 Import
-                <input type="file" accept=".json" onChange={handleImportData} style={{ display: 'none' }} />
-              </label>
+              <button type="button" onClick={() => setShowHelpModal(true)} style={{ background: '#1e3a8a', border: '1px solid #3b82f6', color: '#60a5fa', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase' }}>💡 How to Use</button>
+              <button type="button" onClick={handleExportData} style={{ background: '#334155', border: '1px solid #475569', color: '#f8fafc', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase' }}>📥 Export</button>
+              <label style={{ background: '#334155', border: '1px solid #475569', color: '#f8fafc', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase' }}>📤 Import<input type="file" accept=".json" onChange={handleImportData} style={{ display: 'none' }} /></label>
             </div>
           </div>
           
@@ -215,7 +193,6 @@ export default function App() {
             <input type="date" min="2026-01-01" max="2027-06-30" onKeyDown={handleDateKeyDown} value={evalDate} onChange={(e) => handleDatePickerChange(e.target.value)} style={inputStyle} />
           </div>
 
-          {/* 4X TALLER VISUAL GRAPHICAL TIMELINE */}
           <div style={{ position: 'relative', height: '160px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', margin: '24px 0 16px 0', overflow: 'hidden', boxShadow: 'inset 0 4px 10px rgba(0,0,0,0.5)' }}>
             <div style={{ position: 'absolute', left: '0%', width: '16.66%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'26 Q1</div>
             <div style={{ position: 'absolute', left: '16.66%', width: '16.66%', borderRight: '1px dashed #1e293b', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'26 Q2</div>
@@ -225,11 +202,9 @@ export default function App() {
             <div style={{ position: 'absolute', left: '83.33%', width: '16.66%', top: 0, bottom: 0, padding: '4px', fontSize: '8px', color: '#475569', fontWeight: 'bold' }}>'27 Q2</div>
 
             <div style={{ position: 'absolute', left: `${windowLeft}%`, width: `${windowWidth}%`, top: 0, bottom: 0, background: 'rgba(59,130,246,0.12)', borderLeft: '1px dashed #3b82f6', borderRight: '1px dashed #3b82f6', zIndex: 1 }} />
-            
             {processedTrips.map((trip) => (
               <div key={trip.idx} style={{ position: 'absolute', left: `${trip.left}%`, width: `${trip.width}%`, top: '24px', bottom: '24px', backgroundColor: trip.color || '#3b82f6', borderRadius: '4px', minWidth: '4px', zIndex: 2, boxShadow: '0 2px 5px rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)' }} title={`${trip.country}: ${trip.duration} days`} />
             ))}
-
             <div style={{ position: 'absolute', left: `${evalMarkerLeft}%`, width: '2px', top: 0, bottom: 0, backgroundColor: '#ef4444', zIndex: 3 }}>
               <div style={{ position: 'absolute', top: 0, left: '-4px', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ef4444', boxShadow: '0 0 8px #ef4444' }} />
               <div style={{ position: 'absolute', bottom: 0, left: '-4px', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ef4444', boxShadow: '0 0 8px #ef4444' }} />
@@ -261,10 +236,9 @@ export default function App() {
           </div>
         </div>
 
-        {/* LOOKAHEAD BANNER */}
         {totalDaysUsed >= 90 && (
           <div style={{ ...cardStyle, background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', border: '1px solid #3b82f6' }}>
-            <h2 style={{ fontSize: '11px', fontWeight: '800', color: '#3b82f6', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.05em' }}>🔮 Predictive Entry Lookahead</h2>
+            <h2 style={{ fontSize: '11px', fontWeight: '800', color: '#3b82f6', textTransform: 'uppercase', marginBottom: '6px' }}>🔮 Predictive Entry Lookahead</h2>
             <div style={{ fontSize: '14px', color: '#f8fafc', fontWeight: '600', lineHeight: '1.5' }}>
               {nextRefreshDate ? (
                 <span>Assuming you leave the zone tomorrow, your earliest next entry allowance window opens on <span style={{ color: '#60a5fa', textDecoration: 'underline', fontWeight: '800' }}>{formatDisplayDate(nextRefreshDate.toISOString().split('T')[0])}</span>.</span>
@@ -272,39 +246,19 @@ export default function App() {
                 <span style={{ color: '#94a3b8' }}>An active ongoing stay means your counter increases at the same rate as the window moves. You must log a departure date to allow days to roll off.</span>
               )}
             </div>
-            <p style={{ color: '#64748b', fontSize: '10px', marginTop: '6px', marginBottom: 0 }}>Simulated day-by-day looking forward across rolling lookback limits.</p>
           </div>
         )}
 
-        {/* LOG NEW ENTRY FORM */}
         <div style={cardStyle}>
           <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>➕ Add New Travel Segment</h2>
           <form onSubmit={handleAddTrip}>
-            
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '14px', position: 'relative' }}>
               <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Destination Country</label>
-              <input 
-                type="text" 
-                placeholder="Type to filter e.g. Poland, France..." 
-                value={country} 
-                onFocus={() => setShowSuggestions(true)}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                onChange={(e) => { setCountry(e.target.value); setShowSuggestions(true); }} 
-                style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} 
-              />
-              
+              <input type="text" placeholder="Type to filter e.g. Poland, France..." value={country} onFocus={() => setShowSuggestions(true)} onBlur={() => setTimeout(() => setShowSuggestions(false), 200)} onChange={(e) => { setCountry(e.target.value); setShowSuggestions(true); }} style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} />
               {showSuggestions && filteredSuggestions.length > 0 && (
                 <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e293b', border: '1px solid #475569', borderRadius: '8px', marginTop: '4px', zIndex: 10, maxHeight: '150px', overflowY: 'auto', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)' }}>
                   {filteredSuggestions.map((suggestion, sIdx) => (
-                    <div 
-                      key={sIdx} 
-                      onClick={() => { setCountry(suggestion); setShowSuggestions(false); }}
-                      style={{ padding: '10px 14px', fontSize: '13px', color: '#f8fafc', cursor: 'pointer', borderBottom: '1px solid #334155' }}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#2563eb'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                    >
-                      📍 {suggestion}
-                    </div>
+                    <div key={sIdx} onClick={() => { setCountry(suggestion); setShowSuggestions(false); }} style={{ padding: '10px 14px', fontSize: '13px', color: '#f8fafc', cursor: 'pointer', borderBottom: '1px solid #334155' }} onMouseEnter={(e) => e.target.style.backgroundColor = '#2563eb'} onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}>📍 {suggestion}</div>
                   ))}
                 </div>
               )}
@@ -327,7 +281,6 @@ export default function App() {
             <button type="submit" style={{ background: '#2563eb', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', width: '100%' }}>Append to Log Timeline</button>
           </form>
         </div>
-        {/* WORKSPACE HISTORY LOG LOG */}
         <div style={cardStyle}>
           <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>📋 Logged Stay Segments</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -342,9 +295,7 @@ export default function App() {
                       {trip.country}
                       {trip.ongoing && <span style={{ background: '#1e3a8a', color: '#60a5fa', border: '1px solid #3b82f6', fontSize: '9px', fontWeight: '700', padding: '2px 6px', borderRadius: '20px', textTransform: 'uppercase' }}>Active</span>}
                     </div>
-                    <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>
-                      {formatDisplayDate(trip.entry)} — {trip.ongoing ? 'Ongoing Stay' : formatDisplayDate(trip.exit)}
-                    </div>
+                    <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>{formatDisplayDate(trip.entry)} — {trip.ongoing ? 'Ongoing Stay' : formatDisplayDate(trip.exit)}</div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <span style={{ background: '#334155', padding: '4px 8px', borderRadius: '6px', fontSize: '13px', fontWeight: '700', color: '#f1f5f9' }}>{trip.duration} Days</span>
@@ -358,7 +309,6 @@ export default function App() {
 
       </div>
 
-      {/* FULL SCREEN MODAL DIALOG USER OVERLAY GUIDE */}
       {showHelpModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px', boxSizing: 'border-box' }}>
           <div style={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '24px', padding: '28px', maxWidth: '500px', width: '100%', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', boxSizing: 'border-box', color: '#cbd5e1', fontFamily: 'system-ui, sans-serif' }}>
@@ -368,19 +318,23 @@ export default function App() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px', lineHeight: '1.6', maxHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>
               <div>
-                <strong style={{ color: '#f8fafc', display: 'block', marginBottom: '2px' }}>📊 The 90/180-Day Rolling Rule</strong>
-                Short-stay visitors to the Schengen zone are allowed to spend a maximum of <strong>90 days within any rolling 180-day lookback window</strong>. This app calculates that dynamically based on your slider position.
+                <strong style={{ color: '#3b82f6', display: 'block', marginBottom: '2px' }}>🔍 Navigating with Evaluation Date & Slider</strong>
+                The <strong>Evaluation Date</strong> calendar selector and horizontal range slider work hand-in-hand to shift your reference timeline point. Changing either tool updates the <strong>red focal pinpoint indicator</strong> on your 18-month map grid and establishes the target point for the rolling lookback count [Vercel].
               </div>
               <div>
-                <strong style={{ color: '#f8fafc', display: 'block', marginBottom: '2px' }}>📍 Logging Trips & Transit Days</strong>
+                <strong style={{ color: '#34d399', display: 'block', marginBottom: '2px' }}>📊 The 90/180-Day Rolling Rule</strong>
+                The panel dynamically assesses how many total days you have logged inside your active 180-day window relative to your current slider view point. This allows you to slide back into the past to track history or slide out into 2027 to forecast future trip balances [Vercel].
+              </div>
+              <div>
+                <strong style={{ color: '#cbd5e1', display: 'block', marginBottom: '2px' }}>📍 Logging Trips & Transit Days</strong>
                 Type a destination country name and select an official state from the suggestion dropdown. The overlap calculator handles transit days perfectly, meaning you can exit Country A and enter Country B on the same afternoon.
               </div>
               <div>
-                <strong style={{ color: '#f8fafc', display: 'block', marginBottom: '2px' }}>🏃 Active Stays Checkbox</strong>
+                <strong style={{ color: '#cbd5e1', display: 'block', marginBottom: '2px' }}>🏃 Active Stays Checkbox</strong>
                 Check the <em>"Still inside Schengen zone"</em> box if you are currently inside a country. This locks the departure variable to the rolling slider target dynamically.
               </div>
               <div>
-                <strong style={{ color: '#f8fafc', display: 'block', marginBottom: '2px' }}>🔒 Privacy & File Backups</strong>
+                <strong style={{ color: '#cbd5e1', display: 'block', marginBottom: '2px' }}>🔒 Privacy & File Backups</strong>
                 Your travel histories are stored locally on your own device's internal sandbox. Use the <strong>Export</strong> action to download your timeline profile to your computer, and use <strong>Import</strong> to reload it anytime.
               </div>
             </div>
