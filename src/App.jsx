@@ -107,7 +107,7 @@ export default function App() {
   };
   const handleAddTrip = (e) => {
     e.preventDefault();
-    if (!entryDate || (!exitDate && !isOngoing)) return alert("Please fill in dates.");
+    if (!country || !entryDate || (!exitDate && !isOngoing)) return alert("Please fill in dates.");
     const formattedInputCountry = country.trim();
     const isKnownState = schengenCountries.some(c => c.toLowerCase() === formattedInputCountry.toLowerCase());
     if (!isKnownState) return alert("❌ Invalid Country Entry!");
@@ -139,7 +139,7 @@ export default function App() {
   };
 
   const handleSaveEdit = (idx) => {
-    if (!editEntryDate || (!editExitDate && !editIsOngoing)) return alert("Please fill in dates.");
+    if (!editCountry || !editEntryDate || (!editExitDate && !editIsOngoing)) return alert("Please fill in dates.");
     const formattedInputCountry = editCountry.trim();
     const isKnownState = schengenCountries.some(c => c.toLowerCase() === formattedInputCountry.toLowerCase());
     if (!isKnownState) return alert("❌ Invalid Country Entry!");
@@ -283,7 +283,7 @@ export default function App() {
           </div>
 
           <div style={{ padding: '8px 12px', background: '#1e293b', borderRadius: '8px', border: '1px dashed #475569', fontSize: '11px', color: '#94a3b8', marginBottom: '14px', display: 'flex', justifyContent: 'space-between' }}>
-            <span>📅 Window Start: <strong>{formatDisplayDate(windowStart.toISOString().split('T'))}</strong></span>
+            <span>📅 Window Start: <strong>{formatDisplayDate(windowStart.toISOString().split('T')[0])}</strong></span>
             <span>➡️ Evaluation Target: <strong>{formatDisplayDate(evalDate)}</strong></span>
           </div>
 
@@ -356,7 +356,7 @@ export default function App() {
             <h2 style={{ fontSize: '11px', fontWeight: '800', color: '#3b82f6', textTransform: 'uppercase', marginBottom: '4px' }}>🔮 Predictive Entry Lookahead</h2>
             <div style={{ fontSize: '14px', color: '#f8fafc', fontWeight: '600', lineHeight: '1.5' }}>
               {nextRefreshDate ? (
-                <span>Assuming you leave the zone tomorrow, your earliest next entry allowance window opens on <span style={{ color: '#60a5fa', textDecoration: 'underline', fontWeight: '800' }}>{formatDisplayDate(nextRefreshDate.toISOString().split('T'))}</span>.</span>
+                <span>Assuming you leave the zone tomorrow, your earliest next entry allowance window opens on <span style={{ color: '#60a5fa', textDecoration: 'underline', fontWeight: '800' }}>{formatDisplayDate(nextRefreshDate.toISOString().split('T')[0])}</span>.</span>
               ) : (
                 <span style={{ color: '#94a3b8' }}>An active ongoing stay means your counter increases at the same rate as the window moves. You must log a departure date to allow days to roll off.</span>
               )}
@@ -458,35 +458,38 @@ export default function App() {
             )}
           </div>
         </div>
-      {showHelpModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(8px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px', boxSizing: 'border-box' }}>
-          <div style={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '24px', padding: '28px', maxWidth: '500px', width: '100%', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', boxSizing: 'border-box', color: '#cbd5e1', fontFamily: 'system-ui, sans-serif' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #334155', paddingBottom: '12px' }}>
-              <h2 style={{ margin: 0, fontSize: '18px', color: '#f8fafc', fontWeight: '800' }}>💡 App Documentation Guide</h2>
-              <button type="button" onClick={() => setShowHelpModal(false)} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer', fontWeight: 'bold' }}>✕</button>
+        {/* HELP GUIDE OVERLAY */}
+        {showHelpModal && (
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(8px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px', boxSizing: 'border-box' }}>
+            <div style={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '24px', padding: '28px', maxWidth: '500px', width: '100%', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', boxSizing: 'border-box', color: '#cbd5e1', fontFamily: 'system-ui, sans-serif' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #334155', paddingBottom: '12px' }}>
+                <h2 style={{ margin: 0, fontSize: '18px', color: '#f8fafc', fontWeight: '800' }}>💡 App Documentation Guide</h2>
+                <button type="button" onClick={() => setShowHelpModal(false)} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer', fontWeight: 'bold' }}>✕</button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px', lineHeight: '1.6', maxHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>
+                <div>
+                  <strong style={{ color: '#3b82f6', display: 'block', marginBottom: '2px' }}>🔍 Navigating with Evaluation Date & Slider</strong>
+                  The calendar box and range slider target a specific reference day. Adjusting them updates the red focal pinpoint indicator on your 18-month map grid and establishes the target point for the rolling lookback count.
+                </div>
+                <div>
+                  <strong style={{ color: '#34d399', display: 'block', marginBottom: '2px' }}>🛡️ The 30-Day Safety Predictor</strong>
+                  The panel continuously scans 30 days into the future from your slider focal date. If logged upcoming trips create an allowance breach inside the rolling window within the next month, it flips to an immediate cautionary warning.
+                </div>
+                <div>
+                  <strong style={{ color: '#a855f7', display: 'block', marginBottom: '2px' }}>🎛️ Plan My Year: Full Stress Test</strong>
+                  Activating this toggle loops across your entire 18-month itinerary canvas to search for hidden "calendar traps." It catches instances where maximizing stays now accidentally borrows from your allowance later, making it perfect for verifying seasonal property timelines.
+                </div>
+                <div>
+                  <strong style={{ color: '#38bdf8', display: 'block', marginBottom: '2px' }}>✏️ Inline Stay Modification</strong>
+                  Click the pencil icon (✏️) on any item in your trip archive logs to toggle edit mode. Modify the country or dates directly in place and click Save (💾) to run strict collision checkers and instantly refresh your timeline graphics.
+                </div>
+              </div>
+              <button type="button" onClick={() => setShowHelpModal(false)} style={{ width: '100%', background: '#2563eb', color: 'white', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: '700', marginTop: '20px', cursor: 'pointer' }}>Understood, Close Guide</button>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px', lineHeight: '1.6', maxHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>
-              <div>
-                <strong style={{ color: '#3b82f6', display: 'block', marginBottom: '2px' }}>🔍 Navigating with Evaluation Date & Slider</strong>
-                The calendar box and range slider target a specific reference day. Adjusting them updates the red focal pinpoint indicator on your 18-month map grid and establishes the target point for the rolling lookback count.
-              </div>
-              <div>
-                <strong style={{ color: '#34d399', display: 'block', marginBottom: '2px' }}>🛡️ The 30-Day Safety Predictor</strong>
-                The panel continuously scans 30 days into the future from your slider focal date. If logged upcoming trips create an allowance breach inside the rolling window within the next month, it flips to an immediate cautionary warning.
-              </div>
-              <div>
-                <strong style={{ color: '#a855f7', display: 'block', marginBottom: '2px' }}>🎛️ Plan My Year: Full Stress Test</strong>
-                Activating this toggle loops across your entire 18-month itinerary canvas to search for hidden "calendar traps." It catches instances where maximizing stays now accidentally borrows from your allowance later, making it perfect for verifying seasonal property timelines.
-              </div>
-              <div>
-                <strong style={{ color: '#38bdf8', display: 'block', marginBottom: '2px' }}>✏️ Inline Stay Modification</strong>
-                Click the pencil icon (✏️) on any item in your trip archive logs to toggle edit mode. Modify the country or dates directly in place and click Save (💾) to run strict collision checkers and instantly refresh your timeline graphics.
-              </div>
-            </div>
-            <button type="button" onClick={() => setShowHelpModal(false)} style={{ width: '100%', background: '#2563eb', color: 'white', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: '700', marginTop: '20px', cursor: 'pointer' }}>Understood, Close Guide</button>
           </div>
-        </div>
-      )}
+        )}
+
+      </div>
     </div>
   );
 }
