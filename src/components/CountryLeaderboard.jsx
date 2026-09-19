@@ -1,6 +1,5 @@
 import React from 'react';
 
-
 export default function CountryLeaderboard({ processedTrips, cardStyle }) {
   // Aggregate duration totals per country
   const statsMap = processedTrips.reduce((acc, trip) => {
@@ -41,10 +40,10 @@ export default function CountryLeaderboard({ processedTrips, cardStyle }) {
               </div>
               <span style={{ background: '#1e293b', border: '1px solid #475569', color: '#38bdf8', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: '700' }}>
                 {item.days} {item.days === 1 ? 'Day' : 'Days'}
-              </div>
+              </span>
             </div>
           );
-        }))
+        })}
       </div>
     </div>
   );
