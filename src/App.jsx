@@ -12,6 +12,8 @@ import SafetyPredictor from './components/SafetyPredictor';
 import TravelForm from './components/TravelForm';
 import LogHistory from './components/LogHistory';
 import HelpModal from './components/HelpModal';
+// 📊 WIRES UP THE COMPONENT INDEX REFERENCE MAPPING
+import CountryLeaderboard from './components/CountryLeaderboard';
 
 export default function App() {
   const timelineStart = new Date(2026, 0, 1);
@@ -54,16 +56,13 @@ export default function App() {
     document.body.appendChild(anchor); anchor.click(); anchor.remove();
   };
 
-  // 📥 FIXED PATCHED DATA STREAM IMPORTER
   const handleImportData = (e) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    const targetFile = e.target.files[0];
-    
+    const targetFile = e.target.files;
     const fileReader = new FileReader();
     fileReader.readAsText(targetFile, "UTF-8");
     fileReader.onload = (event) => {
       try {
-        // Corrected variable alignment: 'event' matches callback parameter
         const parsed = JSON.parse(event.target.result);
         if (Array.isArray(parsed)) { 
           setTriTrips(parsed); 
@@ -74,7 +73,7 @@ export default function App() {
       } catch (err) { 
         alert("Error parsing file structure."); 
       }
-      e.target.value = ""; // Safely flush stream pointers
+      e.target.value = "";
     };
   };
 
@@ -251,6 +250,12 @@ export default function App() {
           setTriTrips={setTriTrips}
           cardStyle={cardStyle}
           inputStyle={inputStyle}
+        />
+
+        {/* 📊 RENDERS RANKED STAY INTENSITY COUNTRY STATS METRIC CARD */}
+        <CountryLeaderboard 
+          processedTrips={processedTrips} 
+          cardStyle={cardStyle} 
         />
 
         <HelpModal isOpen={showHelpModal} onClose={() => setShowHelpModal(false)} />
