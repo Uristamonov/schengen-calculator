@@ -54,17 +54,27 @@ export default function App() {
     document.body.appendChild(anchor); anchor.click(); anchor.remove();
   };
 
+  // 📥 FIXED PATCHED DATA STREAM IMPORTER
   const handleImportData = (e) => {
     if (!e.target.files || e.target.files.length === 0) return;
+    const targetFile = e.target.files[0];
+    
     const fileReader = new FileReader();
-    fileReader.readAsText(e.target.files, "UTF-8");
+    fileReader.readAsText(targetFile, "UTF-8");
     fileReader.onload = (event) => {
       try {
+        // Corrected variable alignment: 'event' matches callback parameter
         const parsed = JSON.parse(event.target.result);
-        if (Array.isArray(parsed)) { setTriTrips(parsed); alert("Backup data successfully imported!"); }
-        else { alert("Invalid backup structure."); }
-      } catch (err) { alert("Error parsing file structure."); }
-      e.target.value = "";
+        if (Array.isArray(parsed)) { 
+          setTriTrips(parsed); 
+          alert("Backup data successfully imported and synced!"); 
+        } else { 
+          alert("Invalid backup file structure."); 
+        }
+      } catch (err) { 
+        alert("Error parsing file structure."); 
+      }
+      e.target.value = ""; // Safely flush stream pointers
     };
   };
 
@@ -118,7 +128,6 @@ export default function App() {
     const updated = [...trips]; updated[idx] = { ...updated[idx], country: match, entry: editEntryDate, exit: editIsOngoing ? "" : editExitDate, ongoing: editIsOngoing };
     setTriTrips(updated); setEditingIdx(null);
   };
-  // 🎛️ INVOAKING THE EXTERNAL MODULAR SCHENGEN MATH ENGINES
   const targetEvalDate = parseLocalDate(evalDate);
   const windowStart = new Date(targetEvalDate);
   windowStart.setDate(windowStart.getDate() - 179);
