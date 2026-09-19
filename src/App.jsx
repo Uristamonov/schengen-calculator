@@ -14,11 +14,8 @@ import LogHistory from './components/LogHistory';
 import HelpModal from './components/HelpModal';
 import CountryLeaderboard from './components/CountryLeaderboard';
 
-// 🐣 MATHEMATICAL RELATIVE SEED GENERATION ENGINE FOR NEW USERS
 const generateOnboardingSampleData = () => {
   const baseToday = new Date();
-  
-  // Helper to create clean YYYY-MM-DD local strings from relative day offsets
   const getRelativeISOString = (daysOffset) => {
     const d = new Date(baseToday);
     d.setDate(d.getDate() + daysOffset);
@@ -28,24 +25,24 @@ const generateOnboardingSampleData = () => {
   return [
     {
       country: "Spain",
-      entry: getRelativeISOString(-261), // Exactly 01/01/2026 based on 19/09/2026 anchor
-      exit: getRelativeISOString(-171),  // Exactly 31/03/2026 (90 days)
+      entry: getRelativeISOString(-261), 
+      exit: getRelativeISOString(-171),  
       ongoing: false,
       comments: "Test trip - winter sun",
       color: "#3b82f6"
     },
     {
       country: "Italy",
-      entry: getRelativeISOString(-2),   // Exactly 17/09/2026
-      exit: getRelativeISOString(11),    // Exactly 30/09/2026
+      entry: getRelativeISOString(-2),   
+      exit: getRelativeISOString(11),    
       ongoing: false,
       comments: "Test trip - summer holiday",
       color: "#eab308"
     },
     {
       country: "Poland",
-      entry: getRelativeISOString(14),   // Exactly 03/10/2026
-      exit: getRelativeISOString(113),  // Exactly 10/01/2027
+      entry: getRelativeISOString(14),   
+      exit: getRelativeISOString(113),  
       ongoing: false,
       comments: "Test trip - Christmas",
       color: "#ec4899"
@@ -94,9 +91,13 @@ export default function App() {
     document.body.appendChild(anchor); anchor.click(); anchor.remove();
   };
 
+  // 📥 PERMANENTLY FIXED DATA STREAM IMPORTER
   const handleImportData = (e) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    const targetedInputBlob = e.target.files;
+    
+    // CRITICAL INDEX SELECTION LOCK: Safely binds individual item index 0
+    const targetedInputBlob = e.target.files[0];
+    
     const fileReader = new FileReader();
     fileReader.readAsText(targetedInputBlob, "UTF-8");
     fileReader.onload = (event) => {
@@ -115,7 +116,6 @@ export default function App() {
     };
   };
 
-  // 🗑️ UPDATED COVERSATION PROMPT TEXT INTERCEPTORS
   const handleClearAllData = () => {
     const verified = window.confirm("Are you sure you want to delete all trips?");
     if (verified) {
@@ -143,7 +143,7 @@ export default function App() {
   };
 
   const handleAddTrip = (e, incomingCommentText) => {
-    if (!entryDate || (!exitDate && !isOngoing)) return alert("Please fill in dates.");
+    e.preventDefault(); if (!entryDate || (!exitDate && !isOngoing)) return alert("Please fill in dates.");
     const match = schengenCountries.find(c => c.toLowerCase() === country.trim().toLowerCase());
     if (!match) return alert("❌ Invalid Country!");
     const newStart = parseLocalDate(entryDate), newEnd = isOngoing ? new Date(2099, 11, 31) : parseLocalDate(exitDate);
