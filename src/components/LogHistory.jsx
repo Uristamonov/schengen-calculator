@@ -24,6 +24,14 @@ export default function LogHistory({
   cardStyle,
   inputStyle
 }) {
+  // Extended state tracking for comments editing row buffer
+  const [editComment, setEditComment] = React.useState("");
+
+  const triggerStartEditing = (idx, trip) => {
+    startEditing(idx, trip);
+    setEditComment(trip.comments || ""); // Load existing description into active state
+  };
+
   return (
     <div style={cardStyle}>
       <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>📋 Logged Stay Segments</h2>
@@ -47,6 +55,19 @@ export default function LogHistory({
                         </div>
                       )}
                     </div>
+
+                    {/* ✏️ INLINE EDITING NODE FIELD FOR TRIP COMMENTS */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Edit Trip Label / Comments</label>
+                      <input 
+                        type="text" 
+                        value={editComment} 
+                        onChange={(e) => setEditComment(e.target.value)} 
+                        placeholder="e.g. Amalfi Coast, Summer Villa..."
+                        style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} 
+                      />
+                    </div>
+
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <label style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Entry</label>
@@ -62,23 +83,30 @@ export default function LogHistory({
                       <label htmlFor={`editOngoing-${trip.idx}`} style={{ fontSize: '12px', fontWeight: '600' }}>Active Stay</label>
                     </div>
                     <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-                      <button type="button" onClick={() => handleSaveEdit(trip.idx)} style={{ flex: 1, background: '#10b981', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}>💾 Save</button>
+                      {/* Pass custom label field parameter up inside callback */}
+                      <button type="button" onClick={() => handleSaveEdit(trip.idx, editComment)} style={{ flex: 1, background: '#10b981', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}>💾 Save</button>
                       <button type="button" onClick={() => setEditingIdx(null)} style={{ flex: 1, background: '#475569', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}>✕ Cancel</button>
                     </div>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
-                      <div style={{ fontWeight: 'bold', color: '#f8fafc', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ fontWeight: 'bold', color: '#f8fafc', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                         <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: trip.color, display: 'inline-block' }} />
                         {trip.country}
+                        {/* 🏷️ VISUAL CARD COMMENT FIELD RENDERING NODE */}
+                        {trip.comments && (
+                          <span style={{ color: '#38bdf8', fontSize: '13px', fontWeight: '500', fontStyle: 'italic' }}>
+                            — "{trip.comments}"
+                          </span>
+                        )}
                         {trip.ongoing && <span style={{ background: '#1e3a8a', color: '#60a5fa', border: '1px solid #3b82f6', fontSize: '9px', fontWeight: '700', padding: '2px 6px', borderRadius: '20px', textTransform: 'uppercase' }}>Active</span>}
                       </div>
                       <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>{formatDisplayDate(trip.entry)} — {trip.ongoing ? 'Ongoing Stay' : formatDisplayDate(trip.exit)}</div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <span style={{ background: '#334155', padding: '4px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: '700', color: '#f1f5f9' }}>{trip.duration} Days</span>
-                      <button type="button" onClick={() => startEditing(trip.idx, trip)} style={{ background: 'none', border: 'none', color: '#38bdf8', cursor: 'pointer', fontSize: '14px' }} title="Edit Stay">✏️</button>
+                      <button type="button" onClick={() => triggerStartEditing(trip.idx, trip)} style={{ background: 'none', border: 'none', color: '#38bdf8', cursor: 'pointer', fontSize: '14px' }} title="Edit Stay">✏️</button>
                       <button type="button" onClick={() => setTriTrips(trips.filter((_, i) => i !== trip.idx))} style={{ background: 'none', border: 'none', color: '#f87171', cursor: 'pointer', fontSize: '14px' }} title="Delete Stay">🗑️</button>
                     </div>
                   </div>
