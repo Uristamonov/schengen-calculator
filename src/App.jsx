@@ -93,7 +93,6 @@ export default function App() {
     if (e.target.value && e.target.value.length >= 10 && e.key >= '0' && e.key <= '9') e.preventDefault();
   };
 
-  // ➕ HANDLES PARAMETER ASSIGNMENT EXTENSION PASS FOR NEW COMMENT STRING
   const handleAddTrip = (e, incomingCommentText) => {
     if (!entryDate || (!exitDate && !isOngoing)) return alert("Please fill in dates.");
     const match = schengenCountries.find(c => c.toLowerCase() === country.trim().toLowerCase());
@@ -114,7 +113,6 @@ export default function App() {
     setEditExitDate(trip.ongoing ? "" : trip.exit); setEditIsOngoing(trip.ongoing);
   };
 
-  // 💾 SAVES INLINE MODIFICATIONS COMMITTED INSIDE TEXT FIELD CELL ROW
   const handleSaveEdit = (idx, updatedCommentText) => {
     if (!editEntryDate || (!editExitDate && !editIsOngoing)) return alert("Please fill in dates.");
     const match = schengenCountries.find(c => c.toLowerCase() === editCountry.trim().toLowerCase());
@@ -162,7 +160,8 @@ export default function App() {
         <div style={cardStyle}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '4px' }}>
             <div>
-              <h1 style={{ fontSize: '24px', color: '#f8fafc', margin: 0, fontWeight: '800' }}>🇪🇺 Schengen Short-Stay Monitor</h1>
+              {/* UPDATED APPLICATION MASTER HEADER TITLE */}
+              <h1 style={{ fontSize: '24px', color: '#f8fafc', margin: 0, fontWeight: '800' }}>🇪🇺 Schengen Travel Allowance Planner</h1>
               <p style={{ color: '#94a3b8', fontSize: '13px', margin: 0 }}>Interactive 18-Month Lookahead Timeline</p>
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -192,10 +191,11 @@ export default function App() {
             evalDate={evalDate}
           />
 
+          {/* UPDATED FUTURE TRAVEL LOOKAHEAD CHECKBOX FORMS LABEL */}
           <div style={{ display: 'flex', alignItems: 'center', padding: '12px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', marginBottom: '0px', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              <span style={{ fontSize: '13px', fontWeight: '700', color: '#f8fafc' }}>🔍 Plan My Year: Full Continuity Stress Test</span>
-              <span style={{ fontSize: '10px', color: '#64748b' }}>Scans ahead through all 18 months to check for future calendar traps</span>
+              <span style={{ fontSize: '13px', fontWeight: '700', color: '#f8fafc' }}>🔍 Include future travel</span>
+              <span style={{ fontSize: '10px', color: '#64748b' }}>Scans ahead through the next 18 months to check for possible violations</span>
             </div>
             <input type="checkbox" checked={stressTestMode} onChange={(e) => setStressTestMode(e.target.checked)} style={{ width: '18px', height: '18px', cursor: 'pointer' }} />
           </div>
