@@ -31,18 +31,17 @@ export default function LogHistory({
     setEditComment(trip.comments || "");
   };
 
-  // CHRONOLOGICAL DATETIME MULTI-SORT ALGORIHM LOOP PASS
   const sortedProcessedTrips = [...processedTrips].sort((a, b) => {
     return new Date(a.entry + "T00:00:00") - new Date(b.entry + "T00:00:00");
   });
 
   return (
     <div style={cardStyle}>
-      {/* UPDATED CONTAINER CARD HEADER SECTION LABEL */}
       <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>📋 Logged Trips</h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {sortedProcessedTrips.length === 0 ? (
-          <div style={{ textAlign: 'center', color: '#475569', fontSize: '13px', padding: '20px 0' }}>No travel segments currently logged in this browser session.</div>
+          /* UPDATED EMPTY TIMELINE RE-WORDS */
+          <div style={{ textAlign: 'center', color: '#475569', fontSize: '13px', padding: '20px 0' }}>No trips currently logged in this browser session.</div>
         ) : (
           sortedProcessedTrips.map((trip) => {
             return (
