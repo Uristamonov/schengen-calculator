@@ -2,10 +2,27 @@ import React from 'react';
 import { formatDisplayDate } from '../utils/dateHelpers';
 
 export default function LogHistory({
-  trips, processedTrips, editingIdx, setEditingIdx, editCountry, setEditCountry,
-  editShowSuggestions, setEditShowSuggestions, editFilteredSuggestions,
-  editEntryDate, setEditEntryDate, editExitDate, setEditExitDate, editIsOngoing, setEditIsOngoing,
-  startEditing, handleSaveEdit, handleDateKeyDown, setTriTrips, cardStyle, inputStyle
+  trips,
+  processedTrips,
+  editingIdx,
+  setEditingIdx,
+  editCountry,
+  setEditCountry,
+  editShowSuggestions,
+  setEditShowSuggestions,
+  editFilteredSuggestions,
+  editEntryDate,
+  setEditEntryDate,
+  editExitDate,
+  setEditExitDate,
+  editIsOngoing,
+  setEditIsOngoing,
+  startEditing,
+  handleSaveEdit,
+  handleDateKeyDown,
+  setTriTrips,
+  cardStyle,
+  inputStyle
 }) {
   const [editComment, setEditComment] = React.useState("");
 
@@ -14,15 +31,20 @@ export default function LogHistory({
     setEditComment(trip.comments || "");
   };
 
+  // CHRONOLOGICAL DATETIME MULTI-SORT ALGORIHM LOOP PASS
+  const sortedProcessedTrips = [...processedTrips].sort((a, b) => {
+    return new Date(a.entry + "T00:00:00") - new Date(b.entry + "T00:00:00");
+  });
+
   return (
     <div style={cardStyle}>
-      {/* UPDATED CONTAINER ROW HEADER */}
-      <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>📋 Logged Stays</h2>
+      {/* UPDATED CONTAINER CARD HEADER SECTION LABEL */}
+      <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>📋 Logged Trips</h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {processedTrips.length === 0 ? (
+        {sortedProcessedTrips.length === 0 ? (
           <div style={{ textAlign: 'center', color: '#475569', fontSize: '13px', padding: '20px 0' }}>No travel segments currently logged in this browser session.</div>
         ) : (
-          processedTrips.map((trip) => {
+          sortedProcessedTrips.map((trip) => {
             return (
               <div key={trip.idx} style={{ background: '#0f172a', border: '1px solid #334155', padding: '14px', borderRadius: '12px' }}>
                 {editingIdx === trip.idx ? (
