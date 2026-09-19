@@ -44,7 +44,8 @@ export default function SafetyPredictor({
             {stressTestViolationDate ? (
               <span>⚠️ <strong>Future Overstay Detected!!</strong> Planned trips will trigger an overstay on <span style={{ color: '#f87171', textDecoration: 'underline' }}>{formatDisplayDate(stressTestViolationDate)}</span>. Maximum overstay will be <span style={{ color: '#ef4444' }}>{stressTestMaxDays - 90} days</span> inside that 180-day window.</span>
             ) : (
-              <span>✅ <strong>Continuity Verified!</strong> Your entire 18-month itinerary layout clears all rolling lookback limits perfectly. Peak allocation hits {stressTestMaxDays}/90 days.</span>
+              /* UPDATED SUCCESS STATEMENT COPY */
+              <span>✅ <strong>Future Travel Verified</strong> for forthcoming 18-month itinerary. Peak allocation hits {stressTestMaxDays}/90 days.</span>
             )}
           </div>
         </div>
@@ -55,7 +56,6 @@ export default function SafetyPredictor({
           <h2 style={{ fontSize: '11px', fontWeight: '800', color: '#3b82f6', textTransform: 'uppercase', marginBottom: '4px' }}>🔮 Predicted Earliest Re-entry</h2>
           <div style={{ fontSize: '14px', color: '#f8fafc', fontWeight: '600', lineHeight: '1.5' }}>
             {nextRefreshDate ? (
-              /* FIXED CHRONOLOGICAL LOOKAHEAD FORMATCHECK STRING INJECTION */
               (() => {
                 const y = nextRefreshDate.getFullYear();
                 const m = String(nextRefreshDate.getMonth() + 1).padStart(2, '0');
