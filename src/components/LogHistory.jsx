@@ -1,30 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { formatDisplayDate } from '../utils/dateHelpers';
 
 export default function LogHistory({
-  trips,
-  processedTrips,
-  editingIdx,
-  setEditingIdx,
-  editCountry,
-  setEditCountry,
-  editShowSuggestions,
-  setEditShowSuggestions,
-  editFilteredSuggestions,
-  editEntryDate,
-  setEditEntryDate,
-  editExitDate,
-  setEditExitDate,
-  editIsOngoing,
-  setEditIsOngoing,
-  startEditing,
-  handleSaveEdit,
-  handleDateKeyDown,
-  setTriTrips,
-  cardStyle,
-  inputStyle
+  trips, processedTrips, editingIdx, setEditingIdx, editCountry, setEditCountry,
+  editShowSuggestions, setEditShowSuggestions, editFilteredSuggestions,
+  editEntryDate, setEditEntryDate, editExitDate, setEditExitDate, editIsOngoing, setEditIsOngoing,
+  startEditing, handleSaveEdit, handleDateKeyDown, setTriTrips, cardStyle, inputStyle
 }) {
-  const [editComment, setEditComment] = React.useState("");
+  const [editComment, setEditComment] = useState("");
+  const [hoveredBtn, setHoveredBtn] = useState(null); // Local pointer tracker to distinguish inline buttons
 
   const triggerStartEditing = (idx, trip) => {
     startEditing(idx, trip);
@@ -40,7 +24,6 @@ export default function LogHistory({
       <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>📋 Logged Trips</h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {sortedProcessedTrips.length === 0 ? (
-          /* UPDATED EMPTY TIMELINE RE-WORDS */
           <div style={{ textAlign: 'center', color: '#475569', fontSize: '13px', padding: '20px 0' }}>No trips currently logged in this browser session.</div>
         ) : (
           sortedProcessedTrips.map((trip) => {
@@ -79,9 +62,27 @@ export default function LogHistory({
                       <input type="checkbox" id={`editOngoing-${trip.idx}`} checked={editIsOngoing} onChange={(e) => { setEditIsOngoing(e.target.checked); if (e.target.checked) setEditExitDate(""); }} />
                       <label htmlFor={`editOngoing-${trip.idx}`} style={{ fontSize: '12px', fontWeight: '600' }}>Active Stay</label>
                     </div>
+                    
+                    {/* 🎛️ UNIFIED LIFT TRANSFORMS INSTALLED ON INLINE EDITOR BUTTONS */}
                     <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
-                      <button type="button" onClick={() => handleSaveEdit(trip.idx, editComment)} style={{ flex: 1, background: '#10b981', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}>💾 Save</button>
-                      <button type="button" onClick={() => setEditingIdx(null)} style={{ flex: 1, background: '#475569', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', fontWeight: '700', fontSize: '12px', cursor: 'pointer' }}>✕ Cancel</button>
+                      <button 
+                        type="button" 
+                        onClick={() => handleSaveEdit(trip.idx, editComment)} 
+                        onMouseEnter={() => setHoveredBtn(`save-${trip.idx}`)}
+                        onMouseLeave={() => setHoveredBtn(null)}
+                        style={{ flex: 1, background: '#10b981', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', fontWeight: '700', fontSize: '12px', cursor: 'pointer', transition: 'transform 0.15s ease', transform: hoveredBtn === `save-${trip.idx}` ? 'scale(1.03)' : 'scale(1)' }}
+                      >
+                        💾 Save
+                      </button>
+                      <button 
+                        type="button" 
+                        onClick={() => setEditingIdx(null)} 
+                        onMouseEnter={() => setHoveredBtn(`cancel-${trip.idx}`)}
+                        onMouseLeave={() => setHoveredBtn(null)}
+                        style={{ flex: 1, background: '#475569', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', fontWeight: '700', fontSize: '12px', cursor: 'pointer', transition: 'transform 0.15s ease', transform: hoveredBtn === `cancel-${trip.idx}` ? 'scale(1.03)' : 'scale(1)' }}
+                      >
+                        ✕ Cancel
+                      </button>
                     </div>
                   </div>
                 ) : (
@@ -109,4 +110,5 @@ export default function LogHistory({
       </div>
     </div>
   );
-}
+                    }
+                                                                                                                                                                                                                                             
