@@ -27,12 +27,14 @@ export default function SafetyPredictor({
         ) : !safeNextMonth ? (
           <div style={{ padding: '16px', borderRadius: '12px', fontSize: '13px', background: 'rgba(245,158,11,0.1)', border: '1px solid #f59e0b', color: '#fbbf24', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>⚠️ Future Overstay Warning</div>
-            <div>Current window is clear, but scheduled blocks cause a violation on <strong>{highestFutureViolationDay ? formatDisplayDate(highestFutureViolationDay) : ''}</strong>!</div>
+            {/* UPDATED UPCOMING TRIP DESCRIPTION PHRASING */}
+            <div>Current window is clear, but upcoming scheduled trips will cause a violation on <strong>{highestFutureViolationDay ? formatDisplayDate(highestFutureViolationDay) : ''}</strong>!</div>
           </div>
         ) : (
           <div style={{ padding: '16px', borderRadius: '12px', fontSize: '13px', background: 'rgba(16,185,129,0.1)', border: '1px solid #10b981', color: '#34d399', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>✅ Safe Next 30 Days</div>
-            <div>You hold {90 - totalDaysUsed} safe remaining short-stay days available in this window.</div>
+            {/* UPDATED REMAINING CLEAR TEXT PHRASING */}
+            <div>There are {90 - totalDaysUsed} remaining days available in this window.</div>
           </div>
         )}
       </div>
