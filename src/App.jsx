@@ -12,7 +12,6 @@ import SafetyPredictor from './components/SafetyPredictor';
 import TravelForm from './components/TravelForm';
 import LogHistory from './components/LogHistory';
 import HelpModal from './components/HelpModal';
-// 📊 WIRES UP THE COMPONENT INDEX REFERENCE MAPPING
 import CountryLeaderboard from './components/CountryLeaderboard';
 
 export default function App() {
@@ -56,11 +55,14 @@ export default function App() {
     document.body.appendChild(anchor); anchor.click(); anchor.remove();
   };
 
+  // 📥 FIXED PATCHED DATA STREAM IMPORTER
   const handleImportData = (e) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    const targetFile = e.target.files;
+    // TARGET SELECTION FIX: Explicitly targets file element 0 inside the FileList array container
+    const targetedInputBlob = e.target.files[0];
+    
     const fileReader = new FileReader();
-    fileReader.readAsText(targetFile, "UTF-8");
+    fileReader.readAsText(targetedInputBlob, "UTF-8");
     fileReader.onload = (event) => {
       try {
         const parsed = JSON.parse(event.target.result);
@@ -73,7 +75,7 @@ export default function App() {
       } catch (err) { 
         alert("Error parsing file structure."); 
       }
-      e.target.value = "";
+      e.target.value = ""; // Safely flush internal stream cache references
     };
   };
 
@@ -252,7 +254,6 @@ export default function App() {
           inputStyle={inputStyle}
         />
 
-        {/* 📊 RENDERS RANKED STAY INTENSITY COUNTRY STATS METRIC CARD */}
         <CountryLeaderboard 
           processedTrips={processedTrips} 
           cardStyle={cardStyle} 
