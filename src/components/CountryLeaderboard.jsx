@@ -1,14 +1,12 @@
 import React from 'react';
 
 export default function CountryLeaderboard({ processedTrips, cardStyle }) {
-  // Aggregate duration totals per country
   const statsMap = processedTrips.reduce((acc, trip) => {
     const name = trip.country;
     acc[name] = (acc[name] || 0) + trip.duration;
     return acc;
   }, {});
 
-  // Convert map to ranked array sorted highest to lowest duration
   const rankedCountries = Object.entries(statsMap)
     .map(([country, days]) => ({ country, days }))
     .sort((a, b) => b.days - a.days);
@@ -17,16 +15,14 @@ export default function CountryLeaderboard({ processedTrips, cardStyle }) {
 
   return (
     <div style={cardStyle}>
-      <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-        📊 Country Statistics Leaderboard
+      {/* UPDATED SYSTEM METRIC TITLE */}
+      <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        📊 Most-Visited Countries
       </h2>
-      <p style={{ color: '#94a3b8', fontSize: '12px', margin: '0 0 16px 0' }}>
-        Cumulative short-stay time tracking sorted by allocation saturation.
-      </p>
+      {/* TECHNICAL SATURATION JARGON PARAGRAPH COMPLETELY PURGED */}
       
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {rankedCountries.map((item, index) => {
-          // Visual ranking trophy styling indicators
           const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '📍';
           
           return (
