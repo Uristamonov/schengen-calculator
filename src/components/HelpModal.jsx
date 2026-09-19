@@ -14,11 +14,11 @@ export default function HelpModal({ isOpen, onClose }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px', lineHeight: '1.6', maxHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>
           <div>
             <strong style={{ color: '#3b82f6', display: 'block', marginBottom: '2px' }}>🖱️ Grab-and-Slide Timeline Canvas</strong>
-            You can now directly grab, click, and slide the highlighted blue 180-day window block overlay horizontally with your mouse cursor [Vercel]. Shifting it left or right moves your reference frame dynamically, shifting both the input range slider and background calculation engines simultaneously.
+            You can directly grab, click, and slide the highlighted blue 180-day window block overlay horizontally with your mouse cursor [Vercel]. Shifting it left or right moves your reference frame dynamically, updating both the input range slider and background calculation engines simultaneously.
           </div>
           <div>
-            <strong style={{ color: '#eab308', display: 'block', marginBottom: '2px' }}>🔍 Navigating with Evaluation Date & Sliders</strong>
-            The alternative calendar date picker box and range slider target a specific reference day. Adjusting either coordinates matches up parameters to track historical stay segment counters inside the bounded rolling period.
+            <strong style={{ color: '#eab308', display: 'block', marginBottom: '2px' }}>🏷️ Optional Trip Labels & Comments</strong>
+            When appending or editing a segment, you can add an optional custom comment (e.g., *"Amalfi Coast"* or *"Summer Villa"*). These show up inline next to the country name to help you keep track of specific itineraries.
           </div>
           <div>
             <strong style={{ color: '#34d399', display: 'block', marginBottom: '2px' }}>🛡️ The 30-Day Safety Predictor</strong>
@@ -30,7 +30,7 @@ export default function HelpModal({ isOpen, onClose }) {
           </div>
           <div>
             <strong style={{ color: '#38bdf8', display: 'block', marginBottom: '2px' }}>✏️ Inline Stay Modification</strong>
-            Click the pencil icon (✏️) on any item in your trip archive logs to toggle edit mode. Modify the country or dates directly in place and click Save (💾) to run strict collision checkers and instantly refresh your timeline graphics.
+            Click the pencil icon (✏️) on any item in your trip archive logs to toggle edit mode. Modify the country, travel dates, or custom comments directly in place and click Save (💾) to re-verify restrictions and update your metrics.
           </div>
           <div>
             <strong style={{ color: '#cbd5e1', display: 'block', marginBottom: '2px' }}>🔒 Privacy & File Backups</strong>
