@@ -266,3 +266,51 @@ export default function App() {
             cardStyle={cardStyle}
           />
         </div>
+        <TravelForm
+          country={country}
+          setCountry={setCountry}
+          showSuggestions={showSuggestions}
+          setShowSuggestions={setShowSuggestions}
+          filteredSuggestions={filteredSuggestions}
+          entryDate={entryDate}
+          setEntryDate={setEntryDate}
+          exitDate={exitDate}
+          setExitDate={setExitDate}
+          isOngoing={isOngoing}
+          setIsOngoing={setIsOngoing}
+          handleDateKeyDown={handleDateKeyDown}
+          handleAddTrip={handleAddTrip}
+          inputStyle={inputStyle}
+          cardStyle={cardStyle}
+        />
+
+        <LogHistory
+          trips={trips}
+          processedTrips={processedTrips}
+          editingIdx={editingIdx}
+          setEditingIdx={setEditingIdx}
+          editCountry={editCountry}
+          setEditCountry={setEditCountry}
+          editShowSuggestions={editShowSuggestions}
+          setEditShowSuggestions={setEditShowSuggestions}
+          editFilteredSuggestions={editFilteredSuggestions}
+          editEntryDate={editEntryDate}
+          setEditEntryDate={setEditEntryDate}
+          editExitDate={editExitDate}
+          setEditExitDate={setEditExitDate}
+          editIsOngoing={editIsOngoing}
+          setEditIsOngoing={setEditIsOngoing}
+          startEditing={startEditing}
+          handleSaveEdit={handleSaveEdit}
+          handleDateKeyDown={handleDateKeyDown}
+          setTriTrips={setTriTrips}
+          cardStyle={cardStyle}
+          inputStyle={inputStyle}
+        />
+
+        <HelpModal isOpen={showHelpModal} onClose={() => setShowHelpModal(false)} />
+
+      </div>
+    </div>
+  );
+}
