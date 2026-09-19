@@ -140,7 +140,7 @@ export default function App() {
   };
 
   const handleAddTrip = (e, incomingCommentText) => {
-    e.preventDefault(); if (!entryDate || (!exitDate && !isOngoing)) return alert("Please fill in dates.");
+    if (!entryDate || (!exitDate && !isOngoing)) return alert("Please fill in dates.");
     const match = schengenCountries.find(c => c.toLowerCase() === country.trim().toLowerCase());
     if (!match) return alert("❌ Invalid Country!");
     const newStart = parseLocalDate(entryDate), newEnd = isOngoing ? new Date(2099, 11, 31) : parseLocalDate(exitDate);
@@ -173,7 +173,7 @@ export default function App() {
     const updated = [...trips]; updated[idx] = { ...updated[idx], country: match, entry: editEntryDate, exit: editIsOngoing ? "" : editExitDate, ongoing: editIsOngoing, comments: updatedCommentText || "" };
     setTriTrips(updated); setEditingIdx(null);
   };
-      const targetEvalDate = parseLocalDate(evalDate);
+    const targetEvalDate = parseLocalDate(evalDate);
   const windowStart = new Date(targetEvalDate);
   windowStart.setDate(windowStart.getDate() - 179);
 
@@ -198,6 +198,8 @@ export default function App() {
   const inputStyle = { background: '#0f172a', border: '1px solid #475569', color: '#f8fafc', padding: '8px 12px', borderRadius: '8px', fontSize: '14px', outline: 'none' };
   const inlineCalendarStyles = `input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; opacity: 0.8; } input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }`;
 
+  const actionButtonBaseStyle = { border: '1px solid #475569', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase', transition: 'transform 0.15s ease' };
+
   return (
     <div style={{ backgroundColor: '#0f172a', minHeight: '100vh', padding: '20px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', alignItems: 'center', fontFamily: 'system-ui, sans-serif', width: '100%', boxSizing: 'border-box', position: 'relative' }}>
       <style>{inlineCalendarStyles}</style>
@@ -209,9 +211,8 @@ export default function App() {
               <h1 style={{ fontSize: '24px', color: '#f8fafc', margin: 0, fontWeight: '800' }}>🇪🇺 Schengen Travel Allowance Planner</h1>
               <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 12px 0' }}>Interactive 18-Month Lookahead Timeline</p>
               
-              {/* ☕ CUSTOM BRANDED BUY ME A COFFEE ACTION BUTTON LINK */}
               <a 
-                href="https://buymeacoffee.com/gregmoxham" 
+                href="https://buymeacoffee.com" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#FFDD00', color: '#000000', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '700', textDecoration: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.2)', marginBottom: '14px', transition: 'transform 0.15s ease' }}
@@ -221,15 +222,49 @@ export default function App() {
                 <span style={{ fontSize: '14px' }}>☕</span> Buy me a coffee
               </a>
             </div>
+
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <button type="button" onClick={() => setShowHelpModal(true)} style={{ background: '#1e3a8a', border: '1px solid #3b82f6', color: '#60a5fa', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase' }}>💡 How to Use</button>
-              <button type="button" onClick={handleExportData} style={{ background: '#334155', border: '1px solid #475569', color: '#f8fafc', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase' }}>📥 Export</button>
-              <label style={{ background: '#334155', border: '1px solid #475569', color: '#f8fafc', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase', margin: 0 }}>📤 Import<input type="file" accept=".json" onChange={handleImportData} style={{ display: 'none' }} /></label>
-              <button type="button" onClick={handleClearAllData} style={{ background: '#7f1d1d', border: '1px solid #ef4444', color: '#f87171', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase' }}>🗑️ Clear Data</button>
+              <button 
+                type="button" 
+                onClick={() => setShowHelpModal(true)} 
+                style={{ ...actionButtonBaseStyle, background: '#1e3a8a', borderColor: '#3b82f6', color: '#60a5fa' }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                💡 How to Use
+              </button>
+              
+              <button 
+                type="button" 
+                onClick={handleExportData} 
+                style={{ ...actionButtonBaseStyle, background: '#334155', color: '#f8fafc' }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                📥 Export
+              </button>
+              
+              <label 
+                style={{ ...actionButtonBaseStyle, background: '#334155', color: '#f8fafc', margin: 0 }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                📤 Import
+                <input type="file" accept=".json" onChange={handleImportData} style={{ display: 'none' }} />
+              </label>
+              
+              <button 
+                type="button" 
+                onClick={handleClearAllData} 
+                style={{ ...actionButtonBaseStyle, background: '#7f1d1d', borderColor: '#ef4444', color: '#f87171' }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                🗑️ Clear Data
+              </button>
             </div>
           </div>
-          
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '16px 0', background: '#0f172a', padding: '12px', borderRadius: '12px', border: '1px solid #334155' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '16px 0', background: '#0f172a', padding: '12px', borderRadius: '12px', border: '1px solid #334155' }}>
             <span style={{ fontSize: '12px', fontWeight: '700', color: '#94a3b8' }}>Evaluation Date: {formatDisplayDate(evalDate)}</span>
             <input type="date" min="2026-01-01" max="2027-06-30" onKeyDown={handleDateKeyDown} value={evalDate} onChange={(e) => handleDatePickerChange(e.target.value)} style={inputStyle} />
           </div>
