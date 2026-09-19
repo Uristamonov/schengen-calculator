@@ -55,10 +55,8 @@ export default function App() {
     document.body.appendChild(anchor); anchor.click(); anchor.remove();
   };
 
-  // 📥 FIXED PATCHED DATA STREAM IMPORTER
   const handleImportData = (e) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    // TARGET SELECTION FIX: Explicitly targets file element 0 inside the FileList array container
     const targetedInputBlob = e.target.files[0];
     
     const fileReader = new FileReader();
@@ -75,7 +73,7 @@ export default function App() {
       } catch (err) { 
         alert("Error parsing file structure."); 
       }
-      e.target.value = ""; // Safely flush internal stream cache references
+      e.target.value = "";
     };
   };
 
@@ -95,8 +93,9 @@ export default function App() {
     if (e.target.value && e.target.value.length >= 10 && e.key >= '0' && e.key <= '9') e.preventDefault();
   };
 
-  const handleAddTrip = (e) => {
-    e.preventDefault(); if (!entryDate || (!exitDate && !isOngoing)) return alert("Please fill in dates.");
+  // ➕ HANDLES PARAMETER ASSIGNMENT EXTENSION PASS FOR NEW COMMENT STRING
+  const handleAddTrip = (e, incomingCommentText) => {
+    if (!entryDate || (!exitDate && !isOngoing)) return alert("Please fill in dates.");
     const match = schengenCountries.find(c => c.toLowerCase() === country.trim().toLowerCase());
     if (!match) return alert("❌ Invalid Country!");
     const newStart = parseLocalDate(entryDate), newEnd = isOngoing ? new Date(2099, 11, 31) : parseLocalDate(exitDate);
@@ -106,7 +105,7 @@ export default function App() {
       if (newStart < e && newEnd > s) return alert("❌ Scheduling Clash Detected!");
     }
     const colors = ['#3b82f6', '#eab308', '#ec4899', '#14b8a6', '#10b981', '#a855f7'];
-    setTriTrips([...trips, { country: match, entry: entryDate, exit: isOngoing ? "" : exitDate, ongoing: isOngoing, color: colors[trips.length % colors.length] }]);
+    setTriTrips([...trips, { country: match, entry: entryDate, exit: isOngoing ? "" : exitDate, ongoing: isOngoing, comments: incomingCommentText || "", color: colors[trips.length % colors.length] }]);
     setCountry(""); setEntryDate(""); setExitDate(""); setIsOngoing(false);
   };
 
@@ -115,7 +114,8 @@ export default function App() {
     setEditExitDate(trip.ongoing ? "" : trip.exit); setEditIsOngoing(trip.ongoing);
   };
 
-  const handleSaveEdit = (idx) => {
+  // 💾 SAVES INLINE MODIFICATIONS COMMITTED INSIDE TEXT FIELD CELL ROW
+  const handleSaveEdit = (idx, updatedCommentText) => {
     if (!editEntryDate || (!editExitDate && !editIsOngoing)) return alert("Please fill in dates.");
     const match = schengenCountries.find(c => c.toLowerCase() === editCountry.trim().toLowerCase());
     if (!match) return alert("❌ Invalid Country!");
@@ -126,7 +126,7 @@ export default function App() {
       const exist = trips[i], s = parseLocalDate(exist.entry), e = exist.ongoing ? new Date(2099, 11, 31) : parseLocalDate(exist.exit);
       if (newStart < e && newEnd > s) return alert("❌ Scheduling Clash Detected!");
     }
-    const updated = [...trips]; updated[idx] = { ...updated[idx], country: match, entry: editEntryDate, exit: editIsOngoing ? "" : editExitDate, ongoing: editIsOngoing };
+    const updated = [...trips]; updated[idx] = { ...updated[idx], country: match, entry: editEntryDate, exit: editIsOngoing ? "" : editExitDate, ongoing: editIsOngoing, comments: updatedCommentText || "" };
     setTriTrips(updated); setEditingIdx(null);
   };
   const targetEvalDate = parseLocalDate(evalDate);
