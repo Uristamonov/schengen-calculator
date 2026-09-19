@@ -11,12 +11,25 @@ export default function SafetyPredictor({
   nextRefreshDate,
   cardStyle
 }) {
+  // 🎨 DYNAMIC METRIC STYLE COORDINATORS
+  let metricBorderColor = '#334155';
+  let metricTextColor = '#f8fafc';
+
+  if (totalDaysUsed === 90) {
+    metricBorderColor = '#eab308'; // Warning Alert Yellow Border
+    metricTextColor = '#eab308';   // Warning Alert Yellow Text
+  } else if (totalDaysUsed >= 91) {
+    metricBorderColor = '#ef4444'; // Violation Breach Red Border
+    metricTextColor = '#ef4444';   // Violation Breach Red Text
+  }
+
   return (
     <>
       <div style={{ display: 'grid', gridTemplateColumns: '130px 1fr', gap: '16px', marginTop: '16px' }}>
-        <div style={{ background: '#0f172a', border: '1px solid #334155', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+        {/* DYNAMICALLY INJECTED ACCENT CONTAINER */}
+        <div style={{ background: '#0f172a', border: `1px solid ${metricBorderColor}`, borderRadius: '12px', padding: '16px', textAlign: 'center', transition: 'all 0.2s ease' }}>
           <h3 style={{ margin: 0, fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase' }}>Days Used</h3>
-          <p style={{ margin: '4px 0 0 0', fontSize: '36px', fontWeight: '900', color: '#f8fafc' }}>{totalDaysUsed}</p>
+          <p style={{ margin: '4px 0 0 0', fontSize: '36px', fontWeight: '900', color: metricTextColor, transition: 'color 0.2s ease' }}>{totalDaysUsed}</p>
         </div>
         
         {totalDaysUsed > 90 ? (
@@ -44,7 +57,6 @@ export default function SafetyPredictor({
             {stressTestViolationDate ? (
               <span>⚠️ <strong>Future Overstay Detected!!</strong> Planned trips will trigger an overstay on <span style={{ color: '#f87171', textDecoration: 'underline' }}>{formatDisplayDate(stressTestViolationDate)}</span>. Maximum overstay will be <span style={{ color: '#ef4444' }}>{stressTestMaxDays - 90} days</span> inside that 180-day window.</span>
             ) : (
-              /* UPDATED SUCCESS STATEMENT COPY */
               <span>✅ <strong>Future Travel Verified</strong> for forthcoming 18-month itinerary. Peak allocation hits {stressTestMaxDays}/90 days.</span>
             )}
           </div>
