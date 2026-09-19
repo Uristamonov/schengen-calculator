@@ -110,5 +110,5 @@ export default function LogHistory({
       </div>
     </div>
   );
-                    }
-                                                                                                                                                                                                                                             
+                                                       }
+                    
