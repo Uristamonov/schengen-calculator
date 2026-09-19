@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 export default function TravelForm({
   country,
@@ -17,10 +17,20 @@ export default function TravelForm({
   inputStyle,
   cardStyle
 }) {
+  // Local state to capture the optional comment input buffer safely
+  const [commentInput, setCommentInput] = useState("");
+
+  const handleSubmitIntercept = (e) => {
+    e.preventDefault();
+    // Pass the comment text as an extended parameter directly to the App.jsx core hook
+    handleAddTrip(e, commentInput);
+    setCommentInput(""); // Clear field buffer on success
+  };
+
   return (
     <div style={cardStyle}>
       <h2 style={{ fontSize: '16px', fontWeight: '700', color: '#f8fafc', margin: '0 0 16px 0' }}>➕ Add New Travel Segment</h2>
-      <form onSubmit={handleAddTrip}>
+      <form onSubmit={handleSubmitIntercept}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '14px', position: 'relative' }}>
           <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Destination Country</label>
           <input 
@@ -47,6 +57,18 @@ export default function TravelForm({
               ))}
             </div>
           )}
+        </div>
+
+        {/* 📝 NEW OPTIONAL COMMENT/TRIP LABEL FIELD */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '14px' }}>
+          <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Trip Label / Comments (Optional)</label>
+          <input 
+            type="text" 
+            placeholder="e.g. Amalfi Coast, Summer Villa, Business Conference..." 
+            value={commentInput}
+            onChange={(e) => setCommentInput(e.target.value)}
+            style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} 
+          />
         </div>
 
         <div style={{ gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px', display: 'grid' }}>
