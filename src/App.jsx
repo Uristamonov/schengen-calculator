@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { schengenCountries } from './constants/countries';
 import { parseLocalDate, formatDisplayDate } from './utils/dateHelpers';
+import { 
+  processTimelineTrips, 
+  calculateNextRefresh, 
+  runSafetyPredictor, 
+  runFullHorizonStressTest 
+} from './utils/schengenEngine';
 import GraphicalTimeline from './components/GraphicalTimeline';
 import SafetyPredictor from './components/SafetyPredictor';
 import TravelForm from './components/TravelForm';
@@ -112,92 +118,20 @@ export default function App() {
     const updated = [...trips]; updated[idx] = { ...updated[idx], country: match, entry: editEntryDate, exit: editIsOngoing ? "" : editExitDate, ongoing: editIsOngoing };
     setTriTrips(updated); setEditingIdx(null);
   };
+  // 🎛️ INVOAKING THE EXTERNAL MODULAR SCHENGEN MATH ENGINES
   const targetEvalDate = parseLocalDate(evalDate);
   const windowStart = new Date(targetEvalDate);
   windowStart.setDate(windowStart.getDate() - 179);
-  let totalDaysUsed = 0;
 
-  const processedTrips = trips.map((trip, idx) => {
-    const start = parseLocalDate(trip.entry);
-    let end = trip.ongoing ? targetEvalDate : parseLocalDate(trip.exit || evalDate);
-    let segmentDuration = end >= start ? Math.round((end - start) / 86400000) + 1 : 0;
+  const { processedTrips, totalDaysUsed } = processTimelineTrips(
+    trips, targetEvalDate, windowStart, timelineStart, timelineEnd
+  );
 
-    if (start <= targetEvalDate) {
-      let effExit = trip.ongoing ? targetEvalDate : parseLocalDate(trip.exit);
-      if (effExit > targetEvalDate) effExit = targetEvalDate;
-      const interStart = new Date(Math.max(start, windowStart)), interEnd = new Date(Math.min(effExit, targetEvalDate));
-      if (interStart <= interEnd) totalDaysUsed += Math.round((interEnd - interStart) / 86400000) + 1;
-    }
-    const pctStart = Math.max(0, Math.min(100, (start - timelineStart) / (timelineEnd - timelineStart) * 100));
-    const pctEnd = Math.max(0, Math.min(100, (end - timelineStart) / (timelineEnd - timelineStart) * 100));
-    return { ...trip, duration: segmentDuration, left: pctStart, width: Math.max(0.5, pctEnd - pctStart), idx };
-  });
-
-  let nextRefreshDate = null;
-  if (totalDaysUsed >= 90) {
-    let checkDate = new Date(targetEvalDate);
-    for (let dayOffset = 1; dayOffset <= 180; dayOffset++) {
-      checkDate.setDate(checkDate.getDate() + 1);
-      let simulatedStart = new Date(checkDate);
-      simulatedStart.setDate(simulatedStart.getDate() - 179);
-      let simulatedDays = 0;
-      trips.forEach(t => {
-        const start = parseLocalDate(t.entry);
-        let end = t.ongoing ? targetEvalDate : parseLocalDate(t.exit);
-        if (end > checkDate) end = checkDate;
-        const interStart = new Date(Math.max(start, simulatedStart)), interEnd = new Date(Math.min(end, checkDate));
-        if (interStart <= interEnd) simulatedDays += Math.round((interEnd - interStart) / 86400000) + 1;
-      });
-      if (simulatedDays < 90) { nextRefreshDate = new Date(checkDate); break; }
-    }
-  }
-
-  let safeNextMonth = true;
-  let highestFutureViolationDay = null; 
-  let futureCheckDate = new Date(targetEvalDate);
-  for (let d = 1; d <= 30; d++) {
-    futureCheckDate.setDate(futureCheckDate.getDate() + 1);
-    let simStart = new Date(futureCheckDate);
-    simStart.setDate(simStart.getDate() - 179);
-    let simDays = 0;
-    trips.forEach(t => {
-      const start = parseLocalDate(t.entry);
-      let end = t.ongoing ? futureCheckDate : parseLocalDate(t.exit);
-      if (end > futureCheckDate) end = futureCheckDate;
-      const interStart = new Date(Math.max(start, simStart)), interEnd = new Date(Math.min(end, futureCheckDate));
-      if (interStart <= interEnd) simDays += Math.round((interEnd - interStart) / 86400000) + 1;
-    });
-    if (simDays > 90) { 
-      safeNextMonth = false; 
-      const y = futureCheckDate.getFullYear(), m = String(futureCheckDate.getMonth() + 1).padStart(2, '0'), day = String(futureCheckDate.getDate()).padStart(2, '0');
-      highestFutureViolationDay = `${y}-${m}-${day}`;
-      break; 
-    }
-  }
-
-  let stressTestViolationDate = null;
-  let stressTestMaxDays = 0;
-  if (stressTestMode) {
-    let testPointer = new Date(timelineStart);
-    while (testPointer <= timelineEnd) {
-      let simStart = new Date(testPointer);
-      simStart.setDate(simStart.getDate() - 179);
-      let simDays = 0;
-      trips.forEach(t => {
-        const start = parseLocalDate(t.entry);
-        let end = t.ongoing ? (testPointer < targetEvalDate ? testPointer : targetEvalDate) : parseLocalDate(t.exit);
-        if (end > testPointer) end = testPointer;
-        const interStart = new Date(Math.max(start, simStart)), interEnd = new Date(Math.min(end, testPointer));
-        if (interStart <= interEnd) simDays += Math.round((interEnd - interStart) / 86400000) + 1;
-      });
-      if (simDays > 90 && !stressTestViolationDate) { 
-        const y = testPointer.getFullYear(), m = String(testPointer.getMonth() + 1).padStart(2, '0'), d = String(testPointer.getDate()).padStart(2, '0');
-        stressTestViolationDate = `${y}-${m}-${d}`;
-      }
-      if (simDays > stressTestMaxDays) { stressTestMaxDays = simDays; }
-      testPointer.setDate(testPointer.getDate() + 1);
-    }
-  }
+  const nextRefreshDate = calculateNextRefresh(trips, totalDaysUsed, targetEvalDate);
+  const { safeNextMonth, highestFutureViolationDay } = runSafetyPredictor(trips, targetEvalDate);
+  const { stressTestViolationDate, stressTestMaxDays } = runFullHorizonStressTest(
+    trips, stressTestMode, timelineStart, timelineEnd, targetEvalDate
+  );
 
   const filteredSuggestions = schengenCountries.filter(c => c.toLowerCase().includes(country.toLowerCase()) && country.trim() !== "" && c.toLowerCase() !== country.toLowerCase());
   const editFilteredSuggestions = schengenCountries.filter(c => c.toLowerCase().includes(editCountry.toLowerCase()) && editCountry.trim() !== "" && c.toLowerCase() !== editCountry.toLowerCase());
@@ -209,6 +143,7 @@ export default function App() {
   const cardStyle = { backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '16px', padding: '24px', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.3)', marginBottom: '20px', boxSizing: 'border-box' };
   const inputStyle = { background: '#0f172a', border: '1px solid #475569', color: '#f8fafc', padding: '8px 12px', borderRadius: '8px', fontSize: '14px', outline: 'none' };
   const inlineCalendarStyles = `input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; opacity: 0.8; } input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }`;
+
   return (
     <div style={{ backgroundColor: '#0f172a', minHeight: '100vh', padding: '20px', color: '#cbd5e1', display: 'flex', flexDirection: 'column', alignItems: 'center', fontFamily: 'system-ui, sans-serif', width: '100%', boxSizing: 'border-box', position: 'relative' }}>
       <style>{inlineCalendarStyles}</style>
@@ -266,6 +201,7 @@ export default function App() {
             cardStyle={cardStyle}
           />
         </div>
+
         <TravelForm
           country={country}
           setCountry={setCountry}
