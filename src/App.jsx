@@ -5,6 +5,7 @@ import GraphicalTimeline from './components/GraphicalTimeline';
 import SafetyPredictor from './components/SafetyPredictor';
 import TravelForm from './components/TravelForm';
 import LogHistory from './components/LogHistory';
+import HelpModal from './components/HelpModal';
 
 export default function App() {
   const timelineStart = new Date(2026, 0, 1);
@@ -42,30 +43,21 @@ export default function App() {
 
   const handleExportData = () => {
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(trips, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", "schengen_trips_backup.json");
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+    const anchor = document.createElement('a');
+    anchor.setAttribute("href", dataStr); anchor.setAttribute("download", "schengen_trips_backup.json");
+    document.body.appendChild(anchor); anchor.click(); anchor.remove();
   };
 
   const handleImportData = (e) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const fileReader = new FileReader();
-    fileReader.readAsText(e.target.files[0], "UTF-8");
+    fileReader.readAsText(e.target.files, "UTF-8");
     fileReader.onload = (event) => {
       try {
-        const parsedData = JSON.parse(event.target.result);
-        if (Array.isArray(parsedData)) {
-          setTriTrips(parsedData);
-          alert("Backup data successfully imported and synced!");
-        } else {
-          alert("Invalid backup file structure.");
-        }
-      } catch (err) {
-        alert("Error parsing file structure.");
-      }
+        const parsed = JSON.parse(event.target.result);
+        if (Array.isArray(parsed)) { setTriTrips(parsed); alert("Backup data successfully imported!"); }
+        else { alert("Invalid backup structure."); }
+      } catch (err) { alert("Error parsing file structure."); }
       e.target.value = "";
     };
   };
@@ -77,73 +69,48 @@ export default function App() {
   };
 
   const handleSliderChange = (val) => {
-    const numericVal = parseInt(val, 10);
-    setSliderValue(numericVal);
-    let target = new Date(timelineStart);
-    target.setDate(target.getDate() + numericVal);
-    const y = target.getFullYear(), m = String(target.getMonth()+1).padStart(2,'0'), d = String(target.getDate()).padStart(2,'0');
-    setEvalDate(`${y}-${m}-${d}`);
+    const numericVal = parseInt(val, 10); setSliderValue(numericVal);
+    let target = new Date(timelineStart); target.setDate(target.getDate() + numericVal);
+    setEvalDate(`${target.getFullYear()}-${String(target.getMonth()+1).padStart(2,'0')}-${String(target.getDate()).padStart(2,'0')}`);
   };
 
   const handleDateKeyDown = (e) => {
-    if (e.target.value && e.target.value.length >= 10 && e.key >= '0' && e.key <= '9') {
-      e.preventDefault();
-    }
+    if (e.target.value && e.target.value.length >= 10 && e.key >= '0' && e.key <= '9') e.preventDefault();
   };
 
   const handleAddTrip = (e) => {
-    e.preventDefault();
-    if (!entryDate || (!exitDate && !isOngoing)) return alert("Please fill in dates.");
-    const formattedCountry = country.trim();
-    const verified = schengenCountries.find(c => c.toLowerCase() === formattedCountry.toLowerCase());
-    if (!verified) return alert("❌ Invalid Country Entry!");
-
-    const newStart = parseLocalDate(entryDate);
-    const newEnd = isOngoing ? new Date(2099, 11, 31) : parseLocalDate(exitDate);
-    if (newEnd < newStart) return alert("Error: Departure date cannot be earlier than arrival.");
-
+    e.preventDefault(); if (!entryDate || (!exitDate && !isOngoing)) return alert("Please fill in dates.");
+    const match = schengenCountries.find(c => c.toLowerCase() === country.trim().toLowerCase());
+    if (!match) return alert("❌ Invalid Country!");
+    const newStart = parseLocalDate(entryDate), newEnd = isOngoing ? new Date(2099, 11, 31) : parseLocalDate(exitDate);
+    if (newEnd < newStart) return alert("Error: Exit cannot be earlier than entry.");
     for (let i = 0; i < trips.length; i++) {
-      const existing = trips[i];
-      const existStart = parseLocalDate(existing.entry);
-      const existEnd = existing.ongoing ? new Date(2099, 11, 31) : parseLocalDate(existing.exit);
-      if (newStart < existEnd && newEnd > existStart) return alert("❌ Scheduling Clash Detected!");
+      const exist = trips[i], s = parseLocalDate(exist.entry), e = exist.ongoing ? new Date(2099, 11, 31) : parseLocalDate(exist.exit);
+      if (newStart < e && newEnd > s) return alert("❌ Scheduling Clash Detected!");
     }
-
     const colors = ['#3b82f6', '#eab308', '#ec4899', '#14b8a6', '#10b981', '#a855f7'];
-    setTriTrips([...trips, { country: verified, entry: entryDate, exit: isOngoing ? "" : exitDate, ongoing: isOngoing, color: colors[trips.length % colors.length] }]);
+    setTriTrips([...trips, { country: match, entry: entryDate, exit: isOngoing ? "" : exitDate, ongoing: isOngoing, color: colors[trips.length % colors.length] }]);
     setCountry(""); setEntryDate(""); setExitDate(""); setIsOngoing(false);
   };
 
   const startEditing = (idx, trip) => {
-    setEditingIdx(idx);
-    setEditCountry(trip.country);
-    setEditEntryDate(trip.entry);
-    setEditExitDate(trip.ongoing ? "" : trip.exit);
-    setEditIsOngoing(trip.ongoing);
+    setEditingIdx(idx); setEditCountry(trip.country); setEditEntryDate(trip.entry);
+    setEditExitDate(trip.ongoing ? "" : trip.exit); setEditIsOngoing(trip.ongoing);
   };
 
   const handleSaveEdit = (idx) => {
     if (!editEntryDate || (!editExitDate && !editIsOngoing)) return alert("Please fill in dates.");
-    const formattedCountry = editCountry.trim();
-    const verified = schengenCountries.find(c => c.toLowerCase() === formattedCountry.toLowerCase());
-    if (!verified) return alert("❌ Invalid Country Entry!");
-
-    const newStart = parseLocalDate(editEntryDate);
-    const newEnd = editIsOngoing ? new Date(2099, 11, 31) : parseLocalDate(editExitDate);
-    if (newEnd < newStart) return alert("Error: Departure date cannot be earlier than arrival.");
-
+    const match = schengenCountries.find(c => c.toLowerCase() === editCountry.trim().toLowerCase());
+    if (!match) return alert("❌ Invalid Country!");
+    const newStart = parseLocalDate(editEntryDate), newEnd = editIsOngoing ? new Date(2099, 11, 31) : parseLocalDate(editExitDate);
+    if (newEnd < newStart) return alert("Error: Exit cannot be earlier than entry.");
     for (let i = 0; i < trips.length; i++) {
       if (i === idx) continue;
-      const existing = trips[i];
-      const existStart = parseLocalDate(existing.entry);
-      const existEnd = existing.ongoing ? new Date(2099, 11, 31) : parseLocalDate(existing.exit);
-      if (newStart < existEnd && newEnd > existStart) return alert("❌ Scheduling Clash Detected!");
+      const exist = trips[i], s = parseLocalDate(exist.entry), e = exist.ongoing ? new Date(2099, 11, 31) : parseLocalDate(exist.exit);
+      if (newStart < e && newEnd > s) return alert("❌ Scheduling Clash Detected!");
     }
-
-    const updatedTrips = [...trips];
-    updatedTrips[idx] = { ...updatedTrips[idx], country: verified, entry: editEntryDate, exit: editIsOngoing ? "" : editExitDate, ongoing: editIsOngoing };
-    setTriTrips(updatedTrips);
-    setEditingIdx(null);
+    const updated = [...trips]; updated[idx] = { ...updated[idx], country: match, entry: editEntryDate, exit: editIsOngoing ? "" : editExitDate, ongoing: editIsOngoing };
+    setTriTrips(updated); setEditingIdx(null);
   };
   const targetEvalDate = parseLocalDate(evalDate);
   const windowStart = new Date(targetEvalDate);
@@ -299,80 +266,3 @@ export default function App() {
             cardStyle={cardStyle}
           />
         </div>
-
-        <TravelForm
-          country={country}
-          setCountry={setCountry}
-          showSuggestions={showSuggestions}
-          setShowSuggestions={setShowSuggestions}
-          filteredSuggestions={filteredSuggestions}
-          entryDate={entryDate}
-          setEntryDate={setEntryDate}
-          exitDate={exitDate}
-          setExitDate={setExitDate}
-          isOngoing={isOngoing}
-          setIsOngoing={setIsOngoing}
-          handleDateKeyDown={handleDateKeyDown}
-          handleAddTrip={handleAddTrip}
-          inputStyle={inputStyle}
-          cardStyle={cardStyle}
-        />
-
-        <LogHistory
-          trips={trips}
-          processedTrips={processedTrips}
-          editingIdx={editingIdx}
-          setEditingIdx={setEditingIdx}
-          editCountry={editCountry}
-          setEditCountry={setEditCountry}
-          editShowSuggestions={editShowSuggestions}
-          setEditShowSuggestions={setEditShowSuggestions}
-          editFilteredSuggestions={editFilteredSuggestions}
-          editEntryDate={editEntryDate}
-          setEditEntryDate={setEditEntryDate}
-          editExitDate={editExitDate}
-          setEditExitDate={setEditExitDate}
-          editIsOngoing={editIsOngoing}
-          setEditIsOngoing={setEditIsOngoing}
-          startEditing={startEditing}
-          handleSaveEdit={handleSaveEdit}
-          handleDateKeyDown={handleDateKeyDown}
-          setTriTrips={setTriTrips}
-          cardStyle={cardStyle}
-          inputStyle={inputStyle}
-        />
-
-        {showHelpModal && (
-          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15,23,42,0.85)', backdropFilter: 'blur(8px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px', boxSizing: 'border-box' }}>
-            <div style={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '24px', padding: '28px', maxWidth: '500px', width: '100%', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)', boxSizing: 'border-box', color: '#cbd5e1', fontFamily: 'system-ui, sans-serif' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', borderBottom: '1px solid #334155', paddingBottom: '12px' }}>
-                <h2 style={{ margin: 0, fontSize: '18px', color: '#f8fafc', fontWeight: '800' }}>💡 App Documentation Guide</h2>
-                <button type="button" onClick={() => setShowHelpModal(false)} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '20px', cursor: 'pointer', fontWeight: 'bold' }}>✕</button>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px', lineHeight: '1.6', maxHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>
-                <div>
-                  <strong style={{ color: '#3b82f6', display: 'block', marginBottom: '2px' }}>🔍 Navigating with Evaluation Date & Slider</strong>
-                  The calendar box and range slider target a specific reference day. Adjusting them highlights the active 180-day block area using an enclosed background overlay, instantly calculating how many stay segments fall within that zone range.
-                </div>
-                <div>
-                  <strong style={{ color: '#34d399', display: 'block', marginBottom: '2px' }}>🛡️ The 30-Day Safety Predictor</strong>
-                  The panel continuously scans 30 days into the future from your slider focal date. If logged upcoming trips create an allowance breach inside the rolling window within the next month, it flips to an immediate cautionary warning.
-                </div>
-                <div>
-                  <strong style={{ color: '#a855f7', display: 'block', marginBottom: '2px' }}>🎛️ Plan My Year: Full Stress Test</strong>
-                  Activating this toggle loops across your entire 18-month itinerary canvas to search for hidden "calendar traps." It catches instances where maximizing stays now accidentally borrows from your allowance later, making it perfect for verifying seasonal property timelines.
-                </div>
-                <div>
-                  <strong style={{ color: '#38bdf8', display: 'block', marginBottom: '2px' }}>✏️ Inline Stay Modification</strong>
-                  Click the pencil icon (✏️) on any item in your trip archive logs to toggle edit mode. Modify the country or dates directly in place and click Save (💾) to run strict collision checkers and instantly refresh your timeline graphics.
-                </div>
-              </div>
-              <button type="button" onClick={() => setShowHelpModal(false)} style={{ width: '100%', background: '#2563eb', color: 'white', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: '700', marginTop: '20px', cursor: 'pointer' }}>Understood, Close Guide</button>
-            </div>
-          </div>
-        )}
-
-      </div>
-    </div>
-  );
-}
