@@ -11,22 +11,20 @@ export default function SafetyPredictor({
   nextRefreshDate,
   cardStyle
 }) {
-  // 🎨 DYNAMIC METRIC STYLE COORDINATORS
   let metricBorderColor = '#334155';
   let metricTextColor = '#f8fafc';
 
   if (totalDaysUsed === 90) {
-    metricBorderColor = '#eab308'; // Warning Alert Yellow Border
-    metricTextColor = '#eab308';   // Warning Alert Yellow Text
+    metricBorderColor = '#eab308';
+    metricTextColor = '#eab308';
   } else if (totalDaysUsed >= 91) {
-    metricBorderColor = '#ef4444'; // Violation Breach Red Border
-    metricTextColor = '#ef4444';   // Violation Breach Red Text
+    metricBorderColor = '#ef4444';
+    metricTextColor = '#ef4444';
   }
 
   return (
     <>
       <div style={{ display: 'grid', gridTemplateColumns: '130px 1fr', gap: '16px', marginTop: '16px' }}>
-        {/* DYNAMICALLY INJECTED ACCENT CONTAINER */}
         <div style={{ background: '#0f172a', border: `1px solid ${metricBorderColor}`, borderRadius: '12px', padding: '16px', textAlign: 'center', transition: 'all 0.2s ease' }}>
           <h3 style={{ margin: 0, fontSize: '10px', color: '#94a3b8', textTransform: 'uppercase' }}>Days Used</h3>
           <p style={{ margin: '4px 0 0 0', fontSize: '36px', fontWeight: '900', color: metricTextColor, transition: 'color 0.2s ease' }}>{totalDaysUsed}</p>
@@ -44,7 +42,8 @@ export default function SafetyPredictor({
           </div>
         ) : (
           <div style={{ padding: '16px', borderRadius: '12px', fontSize: '13px', background: 'rgba(16,185,129,0.1)', border: '1px solid #10b981', color: '#34d399', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>✅ Safe Next 30 Days</div>
+            {/* UPDATED SAFE CONDITION STATUS HEADER TEXT */}
+            <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>✅ Safe for the next 30 Days</div>
             <div>There are {90 - totalDaysUsed} remaining days available in this window.</div>
           </div>
         )}
