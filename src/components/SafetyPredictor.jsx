@@ -39,11 +39,9 @@ export default function SafetyPredictor({
 
       {stressTestMode && (
         <div style={{ ...cardStyle, background: stressTestViolationDate ? 'rgba(239,68,68,0.05)' : 'rgba(16,185,129,0.05)', borderColor: stressTestViolationDate ? '#ef4444' : '#10b981', marginBottom: '0px', marginTop: '16px' }}>
-          {/* UPDATED STRESS TEST HEADER LABEL */}
           <h2 style={{ fontSize: '11px', fontWeight: '800', color: stressTestViolationDate ? '#f87171' : '#34d399', textTransform: 'uppercase', marginBottom: '4px' }}>🛡️ Future Travel Evaluation</h2>
           <div style={{ fontSize: '13px', color: '#f8fafc', fontWeight: '600' }}>
             {stressTestViolationDate ? (
-              /* UPDATED URGENT WARNING MESSAGE STRINGS */
               <span>⚠️ <strong>Future Overstay Detected!!</strong> Planned trips will trigger an overstay on <span style={{ color: '#f87171', textDecoration: 'underline' }}>{formatDisplayDate(stressTestViolationDate)}</span>. Maximum overstay will be <span style={{ color: '#ef4444' }}>{stressTestMaxDays - 90} days</span> inside that 180-day window.</span>
             ) : (
               <span>✅ <strong>Continuity Verified!</strong> Your entire 18-month itinerary layout clears all rolling lookback limits perfectly. Peak allocation hits {stressTestMaxDays}/90 days.</span>
@@ -54,11 +52,18 @@ export default function SafetyPredictor({
 
       {totalDaysUsed >= 90 && (
         <div style={{ ...cardStyle, background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', border: '1px solid #3b82f6', marginTop: '16px', marginBottom: '0px' }}>
-          {/* UPDATED LOOKAHEAD PANEL HEADER LABEL */}
           <h2 style={{ fontSize: '11px', fontWeight: '800', color: '#3b82f6', textTransform: 'uppercase', marginBottom: '4px' }}>🔮 Predicted Earliest Re-entry</h2>
           <div style={{ fontSize: '14px', color: '#f8fafc', fontWeight: '600', lineHeight: '1.5' }}>
             {nextRefreshDate ? (
-              <span>Assuming you leave the zone tomorrow, your earliest next entry allowance window opens on <span style={{ color: '#60a5fa', textDecoration: 'underline', fontWeight: '800' }}>{formatDisplayDate(nextRefreshDate.toISOString().split('T'))}</span>.</span>
+              /* FIXED CHRONOLOGICAL LOOKAHEAD FORMATCHECK STRING INJECTION */
+              (() => {
+                const y = nextRefreshDate.getFullYear();
+                const m = String(nextRefreshDate.getMonth() + 1).padStart(2, '0');
+                const d = String(nextRefreshDate.getDate()).padStart(2, '0');
+                return (
+                  <span>Assuming you leave the zone tomorrow, your earliest next entry allowance window opens on <span style={{ color: '#60a5fa', textDecoration: 'underline', fontWeight: '800' }}>{formatDisplayDate(`${y}-${m}-${d}`)}</span>.</span>
+                );
+              })()
             ) : (
               <span style={{ color: '#94a3b8' }}>An active ongoing stay means your counter increases at the same rate as the window moves. You must log a departure date to allow days to roll off.</span>
             )}
