@@ -12,8 +12,17 @@ export default function HelpModal({ isOpen, onClose }) {
         </div>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px', lineHeight: '1.6', maxHeight: '350px', overflowY: 'auto', paddingRight: '4px' }}>
+          {/* UPDATED MODAL PRE-POPULATION DOCUMENTATION EXPLANATORY CONTENT */}
           <div>
-            <strong style={{ color: '#3b82f6', display: 'block', marginBottom: '2px' }}>🖱️ Grab-and-Slide Timeline Canvas</strong>
+            <strong style={{ color: '#2563eb', display: 'block', marginBottom: '2px' }}>🐣 Onboarding Sample Trips</strong>
+            To help you get started right away, this tool initializes pre-populated with three distinct test entries (Winter Sun in Spain, Summer Holiday in Italy, and Christmas in Poland). These samples demonstrate how lookback calculations catch potential overstays automatically [Vercel].
+          </div>
+          <div>
+            <strong style={{ color: '#f87171', display: 'block', marginBottom: '2px' }}>🗑️ Resetting to a Blank Slate</strong>
+            Ready to log your own genuine itineraries? Simply click the <strong>"Clear Data"</strong> button located at the very top right corner of the application screen. This purges all sample records instantly and sets up a clean workspace [Vercel].
+          </div>
+          <div>
+            <strong style={{ color: '#3b82f6', display: 'block', marginBottom: '2px' }}>鼠标 Grab-and-Slide Timeline Canvas</strong>
             You can directly grab, click, and slide the highlighted blue 180-day window block overlay horizontally with your mouse cursor [Vercel]. Shifting it left or right moves your reference frame dynamically, updating both the input range slider and background calculation engines simultaneously.
           </div>
           <div>
@@ -21,20 +30,12 @@ export default function HelpModal({ isOpen, onClose }) {
             When appending or editing a segment, you can add an optional custom comment (e.g., *"Amalfi Coast"* or *"Summer Villa"*). These show up inline next to the country name to help you keep track of specific itineraries.
           </div>
           <div>
-            <strong style={{ color: '#34d399', display: 'block', marginBottom: '2px' }}>🛡️ The 30-Day Safety Predictor</strong>
+            <strong style={{ color: '#34d399', display: 'block', marginBottom: '2px' }}>🛡️ Future Travel Warnings</strong>
             The panel continuously evaluates your next month's incoming trips. If future legs cause a rolling violation, it flips the display status box to an immediate warning stating the exact future breach date.
-          </div>
-          <div>
-            <strong style={{ color: '#a855f7', display: 'block', marginBottom: '2px' }}>🎛️ Plan My Year: Full Stress Test</strong>
-            Turning on this button scans all 18 months of data to catch sliding calendar traps. It proves if early month stays accidentally lock your seasonal home allowance down later, preventing long-term overstay surprises.
           </div>
           <div>
             <strong style={{ color: '#38bdf8', display: 'block', marginBottom: '2px' }}>✏️ Inline Stay Modification</strong>
             Click the pencil icon (✏️) on any item in your trip archive logs to toggle edit mode. Modify the country, travel dates, or custom comments directly in place and click Save (💾) to re-verify restrictions and update your metrics.
-          </div>
-          <div>
-            <strong style={{ color: '#cbd5e1', display: 'block', marginBottom: '2px' }}>🔒 Privacy & File Backups</strong>
-            Your travel histories are stored locally on your own device's internal sandbox. Use the <strong>Export</strong> action to download your timeline profile to your computer, and use <strong>Import</strong> to reload it anytime.
           </div>
         </div>
         
