@@ -60,7 +60,6 @@ export default function App() {
 
   const [trips, setTriTrips] = useState(() => {
     const saved = localStorage.getItem('schengen_graphical_timeline_v4');
-    // Initializes with our relative sample trips if no existing data cache matches
     return saved ? JSON.parse(saved) : generateOnboardingSampleData();
   });
 
@@ -97,8 +96,7 @@ export default function App() {
 
   const handleImportData = (e) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    const targetedInputBlob = e.target.files[0];
-    
+    const targetedInputBlob = e.target.files;
     const fileReader = new FileReader();
     fileReader.readAsText(targetedInputBlob, "UTF-8");
     fileReader.onload = (event) => {
@@ -117,14 +115,14 @@ export default function App() {
     };
   };
 
-  // 🗑️ WORKSPACE RESET CONTROLLER
+  // 🗑️ UPDATED COVERSATION PROMPT TEXT INTERCEPTORS
   const handleClearAllData = () => {
-    const verified = window.confirm("Are you sure you want to completely erase all active itineraries and reset to a blank slate?");
+    const verified = window.confirm("Are you sure you want to delete all trips?");
     if (verified) {
       setTriTrips([]);
       setEditingIdx(null);
       localStorage.setItem('schengen_graphical_timeline_v4', JSON.stringify([]));
-      alert("Workspace wiped clean successfully!");
+      alert("All trips deleted");
     }
   };
 
@@ -209,7 +207,6 @@ export default function App() {
       <div style={{ width: '100%', maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '20px', boxSizing: 'border-box' }}>
         
         <div style={cardStyle}>
-          {/* UPDATED RIGHT-JUSTIFIED ACTION ROW GRID LAYER */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '4px' }}>
             <div>
               <h1 style={{ fontSize: '24px', color: '#f8fafc', margin: 0, fontWeight: '800' }}>🇪🇺 Schengen Travel Allowance Planner</h1>
@@ -219,7 +216,6 @@ export default function App() {
               <button type="button" onClick={() => setShowHelpModal(true)} style={{ background: '#1e3a8a', border: '1px solid #3b82f6', color: '#60a5fa', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase' }}>💡 How to Use</button>
               <button type="button" onClick={handleExportData} style={{ background: '#334155', border: '1px solid #475569', color: '#f8fafc', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase' }}>📥 Export</button>
               <label style={{ background: '#334155', border: '1px solid #475569', color: '#f8fafc', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase', margin: 0 }}>📤 Import<input type="file" accept=".json" onChange={handleImportData} style={{ display: 'none' }} /></label>
-              {/* 🗑️ NEW RIGHT-ALIGNED ACTION TRIGGER ACTION BUTTON */}
               <button type="button" onClick={handleClearAllData} style={{ background: '#7f1d1d', border: '1px solid #ef4444', color: '#f87171', fontSize: '11px', fontWeight: '700', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', textTransform: 'uppercase' }}>🗑️ Clear Data</button>
             </div>
           </div>
