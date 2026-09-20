@@ -14,8 +14,10 @@ import LogHistory from './components/LogHistory';
 import HelpModal from './components/HelpModal';
 import CountryLeaderboard from './components/CountryLeaderboard';
 
+// 🐣 RELATIVE ONBOARDING DATA INITIALIZER MATRIX
 const generateOnboardingSampleData = () => {
   const baseToday = new Date();
+  
   const getRelativeISOString = (daysOffset) => {
     const d = new Date(baseToday);
     d.setDate(d.getDate() + daysOffset);
@@ -79,7 +81,6 @@ export default function App() {
   const [editEntryDate, setEditEntryDate] = useState("");
   const [editExitDate, setEditExitDate] = useState("");
   const [editIsOngoing, setEditIsOngoing] = useState(false);
-
   useEffect(() => {
     localStorage.setItem('schengen_graphical_timeline_v4', JSON.stringify(trips));
   }, [trips]);
@@ -93,7 +94,7 @@ export default function App() {
 
   const handleImportData = (e) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    const targetedInputBlob = e.target.files[0];
+    const targetedInputBlob = e.target.files;
     
     const fileReader = new FileReader();
     fileReader.readAsText(targetedInputBlob, "UTF-8");
@@ -140,7 +141,7 @@ export default function App() {
   };
 
   const handleAddTrip = (e, incomingCommentText) => {
-    if (!entryDate || (!exitDate && !isOngoing)) return alert("Please fill in dates.");
+    e.preventDefault(); if (!entryDate || (!exitDate && !isOngoing)) return alert("Please fill in dates.");
     const match = schengenCountries.find(c => c.toLowerCase() === country.trim().toLowerCase());
     if (!match) return alert("❌ Invalid Country!");
     const newStart = parseLocalDate(entryDate), newEnd = isOngoing ? new Date(2099, 11, 31) : parseLocalDate(exitDate);
@@ -264,7 +265,8 @@ export default function App() {
               </button>
             </div>
           </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '16px 0', background: '#0f172a', padding: '12px', borderRadius: '12px', border: '1px solid #334155' }}>
+          
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '16px 0', background: '#0f172a', padding: '12px', borderRadius: '12px', border: '1px solid #334155' }}>
             <span style={{ fontSize: '12px', fontWeight: '700', color: '#94a3b8' }}>Evaluation Date: {formatDisplayDate(evalDate)}</span>
             <input type="date" min="2026-01-01" max="2027-06-30" onKeyDown={handleDateKeyDown} value={evalDate} onChange={(e) => handleDatePickerChange(e.target.value)} style={inputStyle} />
           </div>
@@ -283,8 +285,7 @@ export default function App() {
             windowStart={windowStart}
             evalDate={evalDate}
           />
-
-          <div style={{ display: 'flex', alignItems: 'center', padding: '12px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', marginBottom: '0px', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', padding: '12px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', marginBottom: '0px', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
               <span style={{ fontSize: '13px', fontWeight: '700', color: '#f8fafc' }}>🔍 Include future travel</span>
               <span style={{ fontSize: '10px', color: '#64748b' }}>Scans ahead through the next 18 months to check for possible violations</span>
