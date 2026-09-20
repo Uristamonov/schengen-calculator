@@ -252,7 +252,7 @@ export default function App() {
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
               >
                 📤 Import
-                <input type="file" accept=".json" onChange={handleImportData} style={{ display: 'none' }} />
+                <input type="file" accept="application/json,text/plain,*" onChange={handleImportData} style={{ display: 'none' }} />
               </label>
               
               <button 
