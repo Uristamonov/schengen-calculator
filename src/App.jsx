@@ -247,13 +247,21 @@ export default function App() {
               </button>
               
               <label 
-                style={{ ...actionButtonBaseStyle, background: '#334155', color: '#f8fafc', margin: 0 }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-              >
-                📤 Import
-                <input type="file" accept="application/json,text/plain,*" onChange={handleImportData} style={{ display: 'none' }} />
-              </label>
+  style={{ ...actionButtonBaseStyle, background: '#334155', color: '#f8fafc', margin: 0, position: 'relative', overflow: 'hidden' }}
+  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
+  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+>
+                
+  📤 Import
+  {/* 🔥 MOBILE FIX: POSITIONED INVISIBLY SO MOBILE TOUCH EVENTS TRACK PERFECTLY WITH UNRESTRICTED FILE SELECTION */}
+  <input 
+    type="file" 
+    accept="*/*" 
+    onChange={handleImportData} 
+    style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} 
+  />
+</label>
+              
               
               <button 
                 type="button" 
