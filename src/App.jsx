@@ -214,7 +214,7 @@ export default function App() {
               
               {/* ☕ FIXED PROFILE ENDPOINT TARGET — ABSOLUTELY UNTRUNCATED */}
               <a 
-                href="https://buymeacoffee.com" 
+                href="https://buymeacoffee.com/gregmoxham" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#FFDD00', color: '#000000', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '700', textDecoration: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.2)', marginBottom: '14px', transition: 'transform 0.15s ease' }}
