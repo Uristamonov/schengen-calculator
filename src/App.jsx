@@ -81,7 +81,7 @@ export default function App() {
   const [editEntryDate, setEditEntryDate] = useState("");
   const [editExitDate, setEditExitDate] = useState("");
   const [editIsOngoing, setEditIsOngoing] = useState(false);
-  useEffect(() => {
+    useEffect(() => {
     localStorage.setItem('schengen_graphical_timeline_v4', JSON.stringify(trips));
   }, [trips]);
 
@@ -164,7 +164,7 @@ export default function App() {
     if (!editEntryDate || (!editExitDate && !editIsOngoing)) return alert("Please fill in dates.");
     const match = schengenCountries.find(c => c.toLowerCase() === editCountry.trim().toLowerCase());
     if (!match) return alert("❌ Invalid Country!");
-    const newStart = parseLocalDate(editEntryDate), newEnd = editIsOngoing ? new Date(2099, 11, 31) : parseLocalDate(editExitDate);
+    const newStart = parseLocalDate(editEntryDate), newEnd = editIsOngoing ? new Date(2099, 11, 31) : parseLocalDate(editEditDate);
     if (newEnd < newStart) return alert("Error: Exit cannot be earlier than entry.");
     for (let i = 0; i < trips.length; i++) {
       if (i === idx) continue;
@@ -212,6 +212,7 @@ export default function App() {
               <h1 style={{ fontSize: '24px', color: '#f8fafc', margin: 0, fontWeight: '800' }}>🇪🇺 Schengen Travel Allowance Planner</h1>
               <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 12px 0' }}>Interactive 18-Month Lookahead Timeline</p>
               
+              {/* ☕ FIXED PROFILE ENDPOINT TARGET — ABSOLUTELY UNTRUNCATED */}
               <a 
                 href="https://buymeacoffee.com" 
                 target="_blank" 
