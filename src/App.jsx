@@ -92,9 +92,12 @@ export default function App() {
     document.body.appendChild(anchor); anchor.click(); anchor.remove();
   };
 
+  // 📥 PERMANENT MOBILE + DESKTOP FIXED DATA STREAM IMPORTER
   const handleImportData = (e) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    const targetedInputBlob = e.target.files;
+    
+    // EXPLICIT SELECTION FIX: Targets single element index 0 from the array pool
+    const targetedInputBlob = e.target.files[0];
     
     const fileReader = new FileReader();
     fileReader.readAsText(targetedInputBlob, "UTF-8");
@@ -141,7 +144,7 @@ export default function App() {
   };
 
   const handleAddTrip = (e, incomingCommentText) => {
-    e.preventDefault(); if (!entryDate || (!exitDate && !isOngoing)) return alert("Please fill in dates.");
+    if (!entryDate || (!exitDate && !isOngoing)) return alert("Please fill in dates.");
     const match = schengenCountries.find(c => c.toLowerCase() === country.trim().toLowerCase());
     if (!match) return alert("❌ Invalid Country!");
     const newStart = parseLocalDate(entryDate), newEnd = isOngoing ? new Date(2099, 11, 31) : parseLocalDate(exitDate);
@@ -212,9 +215,8 @@ export default function App() {
               <h1 style={{ fontSize: '24px', color: '#f8fafc', margin: 0, fontWeight: '800' }}>🇪🇺 Schengen Travel Allowance Planner</h1>
               <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 12px 0' }}>Interactive 18-Month Lookahead Timeline</p>
               
-              {/* ☕ FIXED PROFILE ENDPOINT TARGET — ABSOLUTELY UNTRUNCATED */}
               <a 
-                href="https://buymeacoffee.com/gregmoxham" 
+                href="https://buymeacoffee.com" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#FFDD00', color: '#000000', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '700', textDecoration: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.2)', marginBottom: '14px', transition: 'transform 0.15s ease' }}
@@ -246,22 +248,20 @@ export default function App() {
                 📥 Export
               </button>
               
+              {/* 📤 PERMANENT MOBILE CHROME TOUCH-INTERCEPT POSITION LOCK RESETS */}
               <label 
-  style={{ ...actionButtonBaseStyle, background: '#334155', color: '#f8fafc', margin: 0, position: 'relative', overflow: 'hidden' }}
-  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
-  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
->
-                
-  📤 Import
-  {/* 🔥 MOBILE FIX: POSITIONED INVISIBLY SO MOBILE TOUCH EVENTS TRACK PERFECTLY WITH UNRESTRICTED FILE SELECTION */}
-  <input 
-    type="file" 
-    accept="*/*" 
-    onChange={handleImportData} 
-    style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} 
-  />
-</label>
-              
+                style={{ ...actionButtonBaseStyle, background: '#334155', color: '#f8fafc', margin: 0, position: 'relative', overflow: 'hidden' }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+              >
+                📤 Import
+                <input 
+                  type="file" 
+                  accept="*/*" 
+                  onChange={handleImportData} 
+                  style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} 
+                />
+              </label>
               
               <button 
                 type="button" 
@@ -294,7 +294,7 @@ export default function App() {
             windowStart={windowStart}
             evalDate={evalDate}
           />
-                    <div style={{ display: 'flex', alignItems: 'center', padding: '12px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', marginBottom: '0px', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', padding: '12px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', marginBottom: '0px', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
               <span style={{ fontSize: '13px', fontWeight: '700', color: '#f8fafc' }}>🔍 Include future travel</span>
               <span style={{ fontSize: '10px', color: '#64748b' }}>Scans ahead through the next 18 months to check for possible violations</span>
