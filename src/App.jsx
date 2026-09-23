@@ -14,10 +14,8 @@ import LogHistory from './components/LogHistory';
 import HelpModal from './components/HelpModal';
 import CountryLeaderboard from './components/CountryLeaderboard';
 
-// 🐣 RELATIVE ONBOARDING DATA INITIALIZER MATRIX
 const generateOnboardingSampleData = () => {
   const baseToday = new Date();
-  
   const getRelativeISOString = (daysOffset) => {
     const d = new Date(baseToday);
     d.setDate(d.getDate() + daysOffset);
@@ -81,7 +79,8 @@ export default function App() {
   const [editEntryDate, setEditEntryDate] = useState("");
   const [editExitDate, setEditExitDate] = useState("");
   const [editIsOngoing, setEditIsOngoing] = useState(false);
-    useEffect(() => {
+
+  useEffect(() => {
     localStorage.setItem('schengen_graphical_timeline_v4', JSON.stringify(trips));
   }, [trips]);
 
@@ -92,12 +91,9 @@ export default function App() {
     document.body.appendChild(anchor); anchor.click(); anchor.remove();
   };
 
-  // 📥 PERMANENT MOBILE + DESKTOP FIXED DATA STREAM IMPORTER
   const handleImportData = (e) => {
     if (!e.target.files || e.target.files.length === 0) return;
-    
-    // EXPLICIT INDEX LOCK: Binds array element 0 to handle single file streams flawlessly
-    const targetedInputBlob = e.target.files[0];
+    const targetedInputBlob = e.target.files;
     
     const fileReader = new FileReader();
     fileReader.readAsText(targetedInputBlob, "UTF-8");
@@ -148,7 +144,10 @@ export default function App() {
     const match = schengenCountries.find(c => c.toLowerCase() === country.trim().toLowerCase());
     if (!match) return alert("❌ Invalid Country!");
     const newStart = parseLocalDate(entryDate), newEnd = isOngoing ? new Date(2099, 11, 31) : parseLocalDate(exitDate);
-    if (newEnd < newStart) return alert("Error: Exit cannot be earlier than entry.");
+    
+    // 🛡️ RE-VALIDATION INTERCEPT GATEWAY
+    if (newEnd < newStart) return alert("❌ Error: Departure date cannot be earlier than your arrival date.");
+    
     for (let i = 0; i < trips.length; i++) {
       const exist = trips[i], s = parseLocalDate(exist.entry), e = exist.ongoing ? new Date(2099, 11, 31) : parseLocalDate(exist.exit);
       if (newStart < e && newEnd > s) return alert("❌ Scheduling Clash Detected!");
@@ -167,8 +166,11 @@ export default function App() {
     if (!editEntryDate || (!editExitDate && !editIsOngoing)) return alert("Please fill in dates.");
     const match = schengenCountries.find(c => c.toLowerCase() === editCountry.trim().toLowerCase());
     if (!match) return alert("❌ Invalid Country!");
-    const newStart = parseLocalDate(editEntryDate), newEnd = editIsOngoing ? new Date(2099, 11, 31) : parseLocalDate(editEditDate);
-    if (newEnd < newStart) return alert("Error: Exit cannot be earlier than entry.");
+    const newStart = parseLocalDate(editEntryDate), newEnd = editIsOngoing ? new Date(2099, 11, 31) : parseLocalDate(editExitDate);
+    
+    // 🛡️ RE-VALIDATION INTERCEPT GATEWAY
+    if (newEnd < newStart) return alert("❌ Error: Departure date cannot be earlier than your arrival date.");
+    
     for (let i = 0; i < trips.length; i++) {
       if (i === idx) continue;
       const exist = trips[i], s = parseLocalDate(exist.entry), e = exist.ongoing ? new Date(2099, 11, 31) : parseLocalDate(exist.exit);
@@ -177,7 +179,7 @@ export default function App() {
     const updated = [...trips]; updated[idx] = { ...updated[idx], country: match, entry: editEntryDate, exit: editIsOngoing ? "" : editExitDate, ongoing: editIsOngoing, comments: updatedCommentText || "" };
     setTriTrips(updated); setEditingIdx(null);
   };
-    const targetEvalDate = parseLocalDate(evalDate);
+  const targetEvalDate = parseLocalDate(evalDate);
   const windowStart = new Date(targetEvalDate);
   windowStart.setDate(windowStart.getDate() - 179);
 
@@ -213,11 +215,10 @@ export default function App() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px', marginBottom: '4px' }}>
             <div>
               <h1 style={{ fontSize: '24px', color: '#f8fafc', margin: 0, fontWeight: '800' }}>🇪🇺 Schengen Travel Allowance Planner</h1>
-              <p style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 12px 0' }}>Interactive 18-Month Lookahead Timeline</p>
+              <h2 style={{ color: '#94a3b8', fontSize: '13px', margin: '0 0 12px 0', fontWeight: 'normal' }}>Interactive 18-Month Lookahead Timeline</h2>
               
-              {/* ☕ HARDCODED UNTRUNCATED PROFILE TARGET URL */}
               <a 
-                href="https://buymeacoffee.com/gregmoxham" 
+                href="https://buymeacoffee.com" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#FFDD00', color: '#000000', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '700', textDecoration: 'none', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.2)', marginBottom: '14px', transition: 'transform 0.15s ease' }}
@@ -230,8 +231,7 @@ export default function App() {
 
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
               <button 
-                type="button" 
-                onClick={() => setShowHelpModal(true)} 
+                type="button" onClick={() => setShowHelpModal(true)} 
                 style={{ ...actionButtonBaseStyle, background: '#1e3a8a', borderColor: '#3b82f6', color: '#60a5fa' }}
                 onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
@@ -240,8 +240,7 @@ export default function App() {
               </button>
               
               <button 
-                type="button" 
-                onClick={handleExportData} 
+                type="button" onClick={handleExportData} 
                 style={{ ...actionButtonBaseStyle, background: '#334155', color: '#f8fafc' }}
                 onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
@@ -249,24 +248,17 @@ export default function App() {
                 📥 Export
               </button>
               
-              {/* 📤 MOBILE CHROME TOUCH-INTERCEPT OVERRIDE TRIGGER LAYER */}
               <label 
                 style={{ ...actionButtonBaseStyle, background: '#334155', color: '#f8fafc', margin: 0, position: 'relative', overflow: 'hidden' }}
                 onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
               >
                 📤 Import
-                <input 
-                  type="file" 
-                  accept="*/*" 
-                  onChange={handleImportData} 
-                  style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} 
-                />
+                <input type="file" accept="*/*" onChange={handleImportData} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} />
               </label>
               
               <button 
-                type="button" 
-                onClick={handleClearAllData} 
+                type="button" onClick={handleClearAllData} 
                 style={{ ...actionButtonBaseStyle, background: '#7f1d1d', borderColor: '#ef4444', color: '#f87171' }}
                 onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.03)'}
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
@@ -282,20 +274,12 @@ export default function App() {
           </div>
 
           <GraphicalTimeline
-            timelineStart={timelineStart}
-            timelineEnd={timelineEnd}
-            totalTimelineDays={totalTimelineDays}
-            sliderValue={sliderValue}
-            handleSliderChange={handleSliderChange}
-            windowLeft={windowLeft}
-            windowWidth={windowWidth}
-            processedTrips={processedTrips}
-            evalMarkerLeft={evalMarkerLeft}
-            targetEvalDate={targetEvalDate}
-            windowStart={windowStart}
-            evalDate={evalDate}
+            timelineStart={timelineStart} timelineEnd={timelineEnd} totalTimelineDays={totalTimelineDays}
+            sliderValue={sliderValue} handleSliderChange={handleSliderChange} windowLeft={windowLeft} windowWidth={windowWidth}
+            processedTrips={processedTrips} evalMarkerLeft={evalMarkerLeft} targetEvalDate={targetEvalDate} windowStart={windowStart} evalDate={evalDate}
           />
-                    <div style={{ display: 'flex', alignItems: 'center', padding: '12px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', marginBottom: '0px', justifyContent: 'space-between' }}>
+
+          <div style={{ display: 'flex', alignItems: 'center', padding: '12px', background: '#0f172a', borderRadius: '12px', border: '1px solid #334155', marginBottom: '0px', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
               <span style={{ fontSize: '13px', fontWeight: '700', color: '#f8fafc' }}>🔍 Include future travel</span>
               <span style={{ fontSize: '10px', color: '#64748b' }}>Scans ahead through the next 18 months to check for possible violations</span>
@@ -304,63 +288,30 @@ export default function App() {
           </div>
 
           <SafetyPredictor
-            totalDaysUsed={totalDaysUsed}
-            safeNextMonth={safeNextMonth}
-            highestFutureViolationDay={highestFutureViolationDay}
-            stressTestMode={stressTestMode}
-            stressTestViolationDate={stressTestViolationDate}
-            stressTestMaxDays={stressTestMaxDays}
-            nextRefreshDate={nextRefreshDate}
-            cardStyle={cardStyle}
+            totalDaysUsed={totalDaysUsed} safeNextMonth={safeNextMonth} highestFutureViolationDay={highestFutureViolationDay}
+            stressTestMode={stressTestMode} stressTestViolationDate={stressTestViolationDate} stressTestMaxDays={stressTestMaxDays}
+            nextRefreshDate={nextRefreshDate} cardStyle={cardStyle}
           />
         </div>
 
         <TravelForm
-          country={country}
-          setCountry={setCountry}
-          showSuggestions={showSuggestions}
-          setShowSuggestions={setShowSuggestions}
-          filteredSuggestions={filteredSuggestions}
-          entryDate={entryDate}
-          setEntryDate={setEntryDate}
-          exitDate={exitDate}
-          setExitDate={setExitDate}
-          isOngoing={isOngoing}
-          setIsOngoing={setIsOngoing}
-          handleDateKeyDown={handleDateKeyDown}
-          handleAddTrip={handleAddTrip}
-          inputStyle={inputStyle}
-          cardStyle={cardStyle}
+          country={country} setCountry={setCountry} showSuggestions={showSuggestions} setShowSuggestions={setShowSuggestions}
+          filteredSuggestions={filteredSuggestions} entryDate={entryDate} setEntryDate={setEntryDate} exitDate={exitDate}
+          setExitDate={setExitDate} isOngoing={isOngoing} setIsOngoing={setIsOngoing} handleDateKeyDown={handleDateKeyDown}
+          handleAddTrip={handleAddTrip} inputStyle={inputStyle} cardStyle={cardStyle}
         />
 
         <LogHistory
-          trips={trips}
-          processedTrips={processedTrips}
-          editingIdx={editingIdx}
-          setEditingIdx={setEditingIdx}
-          editCountry={editCountry}
-          setEditCountry={setEditCountry}
-          editShowSuggestions={editShowSuggestions}
-          setEditShowSuggestions={setEditShowSuggestions}
-          editFilteredSuggestions={editFilteredSuggestions}
-          editEntryDate={editEntryDate}
-          setEditEntryDate={setEditEntryDate}
-          editExitDate={editExitDate}
-          setEditExitDate={setEditExitDate}
-          editIsOngoing={editIsOngoing}
-          setEditIsOngoing={setEditIsOngoing}
-          startEditing={startEditing}
-          handleSaveEdit={handleSaveEdit}
-          handleDateKeyDown={handleDateKeyDown}
-          setTriTrips={setTriTrips}
-          cardStyle={cardStyle}
-          inputStyle={inputStyle}
+          trips={trips} processedTrips={processedTrips} editingIdx={editingIdx} setEditingIdx={setEditingIdx}
+          editCountry={editCountry} setEditCountry={setEditCountry} editShowSuggestions={editShowSuggestions}
+          setEditShowSuggestions={setEditShowSuggestions} editFilteredSuggestions={editFilteredSuggestions}
+          editEntryDate={editEntryDate} setEditEntryDate={setEditEntryDate} editExitDate={editExitDate}
+          setEditExitDate={setEditExitDate} editIsOngoing={editIsOngoing} setEditIsOngoing={setEditIsOngoing}
+          startEditing={startEditing} handleSaveEdit={handleSaveEdit} handleDateKeyDown={handleDateKeyDown}
+          setTriTrips={setTriTrips} cardStyle={cardStyle} inputStyle={inputStyle}
         />
 
-        <CountryLeaderboard 
-          processedTrips={processedTrips} 
-          cardStyle={cardStyle} 
-        />
+        <CountryLeaderboard processedTrips={processedTrips} cardStyle={cardStyle} />
 
         <HelpModal isOpen={showHelpModal} onClose={() => setShowHelpModal(false)} />
 
