@@ -8,7 +8,7 @@ export default function LogHistory({
   startEditing, handleSaveEdit, handleDateKeyDown, setTriTrips, cardStyle, inputStyle
 }) {
   const [editComment, setEditComment] = useState("");
-  const [hoveredBtn, setHoveredBtn] = useState(null); // Local pointer tracker to distinguish inline buttons
+  const [hoveredBtn, setHoveredBtn] = useState(null);
 
   const triggerStartEditing = (idx, trip) => {
     startEditing(idx, trip);
@@ -51,11 +51,12 @@ export default function LogHistory({
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <label style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Entry</label>
-                        <input type="date" min="2026-01-01" max="2027-06-30" onKeyDown={handleDateKeyDown} value={editEntryDate} onChange={(e) => setEditEntryDate(e.target.value)} style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} />
+                        <input type="date" min="2026-01-01" max="2027-06-30" onKeyDown={handleDateKeyDown} value={editEntryDate} onChange={(e) => { setEditEntryDate(e.target.value); if(editExitDate && editExitDate < e.target.value) setEditExitDate(""); }} style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} />
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column' }}>
                         <label style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Exit</label>
-                        <input type="date" min="2026-01-01" max="2027-06-30" onKeyDown={handleDateKeyDown} value={editExitDate} onChange={(e) => setEditExitDate(e.target.value)} disabled={editIsOngoing} style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} />
+                        {/* 🛡️ RE-VALIDATION LOCK: min FIELD IS BOUND TO ACTIVE EDIT ENTRY VALUE */}
+                        <input type="date" min={editEntryDate || "2026-01-01"} max="2027-06-30" onKeyDown={handleDateKeyDown} value={editExitDate} onChange={(e) => setEditExitDate(e.target.value)} disabled={editIsOngoing} style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} />
                       </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
@@ -63,22 +64,15 @@ export default function LogHistory({
                       <label htmlFor={`editOngoing-${trip.idx}`} style={{ fontSize: '12px', fontWeight: '600' }}>Active Stay</label>
                     </div>
                     
-                    {/* 🎛️ UNIFIED LIFT TRANSFORMS INSTALLED ON INLINE EDITOR BUTTONS */}
                     <div style={{ display: 'flex', gap: '8px', marginTop: '4px' }}>
                       <button 
-                        type="button" 
-                        onClick={() => handleSaveEdit(trip.idx, editComment)} 
-                        onMouseEnter={() => setHoveredBtn(`save-${trip.idx}`)}
-                        onMouseLeave={() => setHoveredBtn(null)}
+                        type="button" onClick={() => handleSaveEdit(trip.idx, editComment)} onMouseEnter={() => setHoveredBtn(`save-${trip.idx}`)} onMouseLeave={() => setHoveredBtn(null)}
                         style={{ flex: 1, background: '#10b981', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', fontWeight: '700', fontSize: '12px', cursor: 'pointer', transition: 'transform 0.15s ease', transform: hoveredBtn === `save-${trip.idx}` ? 'scale(1.03)' : 'scale(1)' }}
                       >
                         💾 Save
                       </button>
                       <button 
-                        type="button" 
-                        onClick={() => setEditingIdx(null)} 
-                        onMouseEnter={() => setHoveredBtn(`cancel-${trip.idx}`)}
-                        onMouseLeave={() => setHoveredBtn(null)}
+                        type="button" onClick={() => setEditingIdx(null)} onMouseEnter={() => setHoveredBtn(`cancel-${trip.idx}`)} onMouseLeave={() => setHoveredBtn(null)}
                         style={{ flex: 1, background: '#475569', color: 'white', border: 'none', padding: '8px', borderRadius: '6px', fontWeight: '700', fontSize: '12px', cursor: 'pointer', transition: 'transform 0.15s ease', transform: hoveredBtn === `cancel-${trip.idx}` ? 'scale(1.03)' : 'scale(1)' }}
                       >
                         ✕ Cancel
@@ -110,5 +104,4 @@ export default function LogHistory({
       </div>
     </div>
   );
-                                                       }
-                    
+}
