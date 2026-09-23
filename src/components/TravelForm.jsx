@@ -1,21 +1,9 @@
 import React, { useState } from 'react';
 
 export default function TravelForm({
-  country,
-  setCountry,
-  showSuggestions,
-  setShowSuggestions,
-  filteredSuggestions,
-  entryDate,
-  setEntryDate,
-  exitDate,
-  setExitDate,
-  isOngoing,
-  setIsOngoing,
-  handleDateKeyDown,
-  handleAddTrip,
-  inputStyle,
-  cardStyle
+  country, setCountry, showSuggestions, setShowSuggestions, filteredSuggestions,
+  entryDate, setEntryDate, exitDate, setExitDate, isOngoing, setIsOngoing,
+  handleDateKeyDown, handleAddTrip, inputStyle, cardStyle
 }) {
   const [commentInput, setCommentInput] = useState("");
   const [isButtonHovered, setIsButtonHovered] = useState(false);
@@ -33,11 +21,8 @@ export default function TravelForm({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '14px', position: 'relative' }}>
           <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Destination Country</label>
           <input 
-            type="text" 
-            placeholder="Type to filter e.g. Poland, France..." 
-            value={country} 
-            onFocus={() => setShowSuggestions(true)} 
-            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)} 
+            type="text" placeholder="Type to filter e.g. Poland, France..." value={country} 
+            onFocus={() => setShowSuggestions(true)} onBlur={() => setTimeout(() => setShowSuggestions(false), 200)} 
             onChange={(e) => { setCountry(e.target.value); setShowSuggestions(true); }} 
             style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} 
           />
@@ -58,11 +43,12 @@ export default function TravelForm({
         <div style={{ gridTemplateColumns: '1fr 1fr', gap: '14px', marginBottom: '14px', display: 'grid' }}>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Arrival Date (Entry)</label>
-            <input type="date" min="2026-01-01" max="2027-06-30" onKeyDown={handleDateKeyDown} value={entryDate} onChange={(e) => setEntryDate(e.target.value)} style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} />
+            <input type="date" min="2026-01-01" max="2027-06-30" onKeyDown={handleDateKeyDown} value={entryDate} onChange={(e) => { setEntryDate(e.target.value); if(exitDate && exitDate < e.target.value) setExitDate(""); }} style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} />
           </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
             <label style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700', textTransform: 'uppercase' }}>Departure Date (Exit)</label>
-            <input type="date" min="2026-01-01" max="2027-06-30" onKeyDown={handleDateKeyDown} value={exitDate} onChange={(e) => setExitDate(e.target.value)} disabled={isOngoing} style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} />
+            {/* 🛡️ RE-VALIDATION LOCK: min FIELD IS TIED TO ACTIVE ARRIVAL VALUE */}
+            <input type="date" min={entryDate || "2026-01-01"} max="2027-06-30" onKeyDown={handleDateKeyDown} value={exitDate} onChange={(e) => setExitDate(e.target.value)} disabled={isOngoing} style={{ ...inputStyle, width: '100%', boxSizing: 'border-box' }} />
           </div>
         </div>
         
@@ -71,11 +57,8 @@ export default function TravelForm({
           <label htmlFor="ongoingCheck" style={{ cursor: 'pointer', fontSize: '13px', fontWeight: '600' }}>Still inside Schengen zone / Active stay</label>
         </div>
 
-        {/* 🎛️ UNIFIED LIFT TRANSFORM INSTALLED HERE */}
         <button 
-          type="submit" 
-          onMouseEnter={() => setIsButtonHovered(true)}
-          onMouseLeave={() => setIsButtonHovered(false)}
+          type="submit" onMouseEnter={() => setIsButtonHovered(true)} onMouseLeave={() => setIsButtonHovered(false)}
           style={{ background: '#2563eb', color: 'white', border: 'none', padding: '12px', borderRadius: '8px', fontWeight: '700', fontSize: '14px', cursor: 'pointer', width: '100%', transition: 'transform 0.15s ease', transform: isButtonHovered ? 'scale(1.02)' : 'scale(1)' }}
         >
           Add Trip
